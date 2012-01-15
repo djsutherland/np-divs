@@ -5,13 +5,15 @@
 
 class DivL2 : public DivFunc {
     public:
-        DivL2(unsigned int dim, unsigned int k, double ub = .99);
+        DivL2(double ub = .99);
 
         virtual double operator()(
                 const Eigen::VectorXf &rho_x,
                 const Eigen::VectorXf &nu_x,
                 const Eigen::VectorXf &rho_y,
-                const Eigen::VectorXf &nu_y
+                const Eigen::VectorXf &nu_y,
+                unsigned int dim,
+                unsigned int k
             ) const;
 };
 #endif

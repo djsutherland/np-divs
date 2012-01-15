@@ -10,14 +10,18 @@
 using Eigen::VectorXf;
 using Eigen::ArrayXf;
 
-DivL2::DivL2(unsigned int dim_, unsigned int k_, double ub_)
-    : DivFunc(dim_, k_, ub_) {}
+DivL2::DivL2(double ub_)
+    : DivFunc(ub_) {}
 
-// estimates L2 divergence between X and Y: \sqrt \int (p-q)^2
 double DivL2::operator()(const VectorXf &rho_x,
                          const VectorXf &nu_x,
                          const VectorXf &rho_y,
-                         const VectorXf &nu_y) const {
+                         const VectorXf &nu_y,
+                         unsigned int dim,
+                         unsigned int k) const {
+    /* Estimates L2 divergence \sqrt \int (p-q)^2 between distribution X and Y,
+     * based on kth-nearest-neighbor statistics.
+     */
     const double c = pow(M_PI, .5 * dim) / gamma_half(dim + 2);
     const double scale = (k-1) / c;
 
