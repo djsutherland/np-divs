@@ -1,4 +1,4 @@
-CC      = g++
+CC      = clang++
 CFLAGS  = -I/usr/local/include/eigen3/ -Wall
 LDFLAGS = -lflann
 
