@@ -1,5 +1,5 @@
 CC      = g++
-CFLAGS  = -I/usr/local/include/eigen3/
+CFLAGS  = -I/usr/local/include/eigen3/ -Wall
 LDFLAGS = -lflann
 
 all: div_l2.o
