@@ -9,7 +9,7 @@ using std::domain_error;
 // Factorial of a nonnegative integer, computed the naive way.
 inline unsigned long factorial(unsigned int n) {
     unsigned long res = 1;
-    for (int i = 2; i <= n; i++)
+    for (unsigned int i = 2; i <= n; i++)
         res *= i;
     return res;
 }
@@ -32,7 +32,7 @@ double gamma_half(unsigned int two_n) {
         static const double sqrt_pi = std::sqrt(M_PI);
 
         double res = sqrt_pi;
-        for (int i = 1; i <= n; i++)
+        for (unsigned int i = 1; i <= n; i++)
             res *= i - .5;
         return res;
     }
