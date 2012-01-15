@@ -12,5 +12,6 @@ classification, regression, and anomaly detection.
 
 Requirements:
   * FLANN: people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
-  * Eigen: eigen.tuxfamily.org
+  * Eigen 3: eigen.tuxfamily.org
   * LIBSVM: csie.ntu.edu.tw/~cjlin/libsvm/
+  * A compiler that has std::isinf in <cmath> (g++/clang++ work)
