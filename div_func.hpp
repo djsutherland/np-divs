@@ -11,10 +11,10 @@ class DivFunc {
         DivFunc(double ub = .99);
 
         virtual double operator()(
-                Eigen::VectorXf rho_x,
-                Eigen::VectorXf nu_x,
-                Eigen::VectorXf rho_y,
-                Eigen::VectorXf nu_y,
+                const Eigen::VectorXf &rho_x,
+                const Eigen::VectorXf &nu_x,
+                const Eigen::VectorXf &rho_y,
+                const Eigen::VectorXf &nu_y,
                 unsigned int dim,
                 unsigned int k
             ) const = 0;
