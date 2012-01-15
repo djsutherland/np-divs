@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "div_l2.hpp"
-#include "fix_terms.hpp"
+#include "utils.hpp"
 #include "gamma_half.hpp"
 
 using Eigen::VectorXf;

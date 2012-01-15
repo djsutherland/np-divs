@@ -2,10 +2,8 @@
 #include <cmath>
 #include <iterator>
 #include <vector>
-#include "fix_terms.hpp"
 
-#include <iostream>
-#include <typeinfo>
+#include "utils.hpp"
 
 using namespace std;
 
@@ -71,6 +69,4 @@ void fix_terms(vector<T> &terms, double ub) {
 
     // replace anything greater than cutoff with cutoff
     replace_if(terms.begin(), terms.end(), greater_than<T>(cutoff), cutoff);
-
-    cout << "cutoff: " << cutoff << endl;
 }
