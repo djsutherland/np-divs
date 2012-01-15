@@ -1,7 +1,8 @@
 #define _USE_MATH_DEFINES // to get M_PI
 #include <cmath>
-
 #include <vector>
+
+#include <Eigen/Core>
 
 #include "div_l2.hpp"
 #include "utils.hpp"

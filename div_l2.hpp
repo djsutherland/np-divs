@@ -1,6 +1,8 @@
 #ifndef DIV_L2_HPP_
 #define DIV_L2_HPP_
 
+#include <Eigen/Core>
+
 #include "div_func.hpp"
 
 class DivL2 : public DivFunc {
