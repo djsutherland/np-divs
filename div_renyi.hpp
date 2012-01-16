@@ -1,15 +1,14 @@
-#ifndef DIV_L2_HPP_
-#define DIV_L2_HPP_
+#ifndef DIV_RENYI_HPP
+#define DIV_RENYI_HPP
 
 #include <Eigen/Core>
+#include "div_alpha.hpp"
 
-#include "div_func.hpp"
-
-class DivL2 : public DivFunc {
-    typedef DivFunc super;
+class DivRenyi : public DivAlpha {
+    typedef DivAlpha super;
 
     public:
-        DivL2(double ub = .99);
+        DivRenyi(double alpha=.999, double ub=.99);
 
         virtual double operator()(
                 const Eigen::VectorXf &rho_x,
@@ -20,4 +19,5 @@ class DivL2 : public DivFunc {
                 unsigned int k
             ) const;
 };
+
 #endif

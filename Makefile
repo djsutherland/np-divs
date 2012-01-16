@@ -2,27 +2,50 @@ CC      = clang++
 CFLAGS  = -I/usr/local/include/eigen3/ -Wall
 LDFLAGS = -lflann
 
-all: np_divs
+# general rule for how to compile a .o file:
+%.o: %.cpp
+	$(CC) -c $(CFLAGS) $<
 
-np_divs: np_divs.o div_l2.o div_func.o gamma.o
+.PHONY: all clean cleanest
+all: np_divs
+div_funcs = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o
+
+################################################################################
+### Divergence estimator
+
+np_divs: np_divs.o $(div_funcs) gamma.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-np_divs.o: np_divs.cpp np_divs.hpp div_l2.hpp
-	$(CC) -c $(CFLAGS) $<
+np_divs.o: np_divs.hpp div_l2.hpp
 np_divs.hpp: div_func.hpp
 
-div_l2.o: div_l2.cpp div_l2.hpp div_func.hpp utils.hpp gamma.hpp
-	$(CC) -c $(CFLAGS) $<
+################################################################################
+### Divergence functions
+
+div_func.o: div_func.hpp
+
+div_l2.o: div_l2.hpp utils.hpp gamma.hpp
 div_l2.hpp: div_func.hpp
 
-div_func.o: div_func.cpp div_func.hpp
-	$(CC) -c $(CFLAGS) $<
+div_alpha.o: div_alpha.hpp utils.hpp gamma.hpp
+div_alpha.hpp: div_func.hpp
 
-gamma.o: gamma.cpp gamma.hpp
-	$(CC) -c $(CFLAGS) $<
+div_renyi.o: div_renyi.hpp
+div_renyi.hpp: div_alpha.hpp
 
-.PHONY: clean cleanest
+div_bc.o: div_bc.hpp
+div_bc.hpp: div_alpha.hpp
 
+div_hellinger.o: div_bc.hpp
+div_hellinger.hpp: div_alpha.hpp
+
+################################################################################
+### Utilities
+
+gamma.o: gamma.hpp
+
+################################################################################
+### Cleanup
 clean:
 	rm -f *.o
 

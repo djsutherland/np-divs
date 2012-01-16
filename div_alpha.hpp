@@ -1,15 +1,25 @@
-#ifndef DIV_L2_HPP_
-#define DIV_L2_HPP_
+#ifndef DIV_ALPHA_HPP_
+#define DIV_ALPHA_HPP_
 
 #include <Eigen/Core>
 
 #include "div_func.hpp"
 
-class DivL2 : public DivFunc {
+class DivAlpha : public DivFunc {
     typedef DivFunc super;
 
+    protected:
+        double alpha;
+
     public:
-        DivL2(double ub = .99);
+        DivAlpha(double alpha=.999, double ub = .99);
+
+        virtual double operator()(
+                const Eigen::VectorXf &rho_x,
+                const Eigen::VectorXf &nu_x,
+                unsigned int dim,
+                unsigned int k
+            ) const;
 
         virtual double operator()(
                 const Eigen::VectorXf &rho_x,

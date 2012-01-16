@@ -71,5 +71,18 @@ void fix_terms(std::vector<T> &terms, double ub = .99) {
     std::replace_if(terms.begin(), terms.end(), greater_than<T>(cutoff), cutoff);
 }
 
+template <typename Derived>
+Eigen::Map<Eigen::Array<typename Derived::Scalar, Eigen::Dynamic, 1> >
+fixed_terms(const Eigen::DenseBase<Derived> &v, double ub) {
+    /* Convenience function to replace calling as_vector(), fix_terms(), and
+     * then making an Eigen::Map of it. */
+    typedef typename Derived::Scalar Scalar;
+
+    std::vector<Scalar> vec = as_vector(v);
+    fix_terms(vec, ub);
+
+    return Eigen::Map<Eigen::Array<Scalar, Eigen::Dynamic, 1> >(
+            &vec[0], vec.size());
+}
 
 #endif
