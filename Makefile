@@ -1,10 +1,11 @@
-CC      = clang++
-CFLAGS  = -I/usr/local/include/eigen3/ -Wall
-LDFLAGS = -lflann
+CPP      = clang++
+CPPFLAGS = -Wall -g
+LDFLAGS  = -lflann
+EIGEN    = /usr/local/include/eigen3/
 
 # general rule for how to compile a .o file:
 %.o: %.cpp
-	$(CC) -c $(CFLAGS) $<
+	$(CPP) -c $(CPPFLAGS) -I$(EIGEN) $<
 
 .PHONY: all clean cleanest
 all: np_divs
@@ -14,7 +15,7 @@ div_funcs = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o
 ### Divergence estimator
 
 np_divs: np_divs.o $(div_funcs) gamma.o
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 np_divs.o: np_divs.hpp div_l2.hpp
 np_divs.hpp: div_func.hpp
