@@ -1,0 +1,7 @@
+- Implement main estimator dealio (np_divs)
+    - decide on threading model
+    - figure out a way to avoid repeated work when x_bags = y_bags
+    - figure out some clever way to avoid repeated work in div funcs?
+        - ie to do both BC and Hellinger
+
+- Implement SDM class
