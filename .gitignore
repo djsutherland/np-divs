@@ -1,3 +1,4 @@
 *.o
+*.d
 *.gch
 np_divs
