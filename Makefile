@@ -9,7 +9,7 @@ INCLUDE = -I$(EIGEN)
 all: np_divs
 
 OBJS = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o \
-	   np_divs.o gamma.o utils.o
+	   np_divs.o dkn.o gamma.o utils.o
 
 ################################################################################
 ### General rule for making .o files that respects .h dependencies

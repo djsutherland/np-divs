@@ -1,12 +1,5 @@
 #include "np_divs.hpp"
 
-#include <Eigen/Core>
-#include <Eigen/StdVector>
-// TODO - be careful in handling std::vector<Eigen::whatever>
-//        http://eigen.tuxfamily.org/dox/TopicStlContainers.html
-
-#include "div_l2.hpp"
-
 // most code in header because it's templated
 
 int main() {
