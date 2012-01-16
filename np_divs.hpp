@@ -1,5 +1,6 @@
 #ifndef NP_DIVS_HPP_
 #define NP_DIVS_HPP_
+#include "basics.hpp"
 
 #include <vector>
 #include <flann/flann.hpp>

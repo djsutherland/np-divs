@@ -1,5 +1,6 @@
 #ifndef DIV_BC_HPP
 #define DIV_BC_HPP
+#include "basics.hpp"
 
 #include <Eigen/Core>
 #include "div_alpha.hpp"

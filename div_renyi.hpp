@@ -1,5 +1,6 @@
 #ifndef DIV_RENYI_HPP
 #define DIV_RENYI_HPP
+#include "basics.hpp"
 
 #include <Eigen/Core>
 #include "div_alpha.hpp"

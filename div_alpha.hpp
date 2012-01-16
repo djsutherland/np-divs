@@ -1,5 +1,6 @@
 #ifndef DIV_ALPHA_HPP_
 #define DIV_ALPHA_HPP_
+#include "basics.hpp"
 
 #include <Eigen/Core>
 

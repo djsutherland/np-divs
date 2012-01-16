@@ -1,5 +1,6 @@
 #ifndef UTILS_HPP_
 #define UTILS_HPP_
+#include "basics.hpp"
 
 #include <algorithm>
 #include <cmath>

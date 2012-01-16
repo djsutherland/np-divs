@@ -1,5 +1,6 @@
 #ifndef DIV_FUNC_HPP_
 #define DIV_FUNC_HPP_
+#include "basics.hpp"
 
 #include <Eigen/Core>
 

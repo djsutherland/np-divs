@@ -1,5 +1,6 @@
 #ifndef DIV_HELLINGER_HPP
 #define DIV_HELLINGER_HPP
+#include "basics.hpp"
 
 #include <Eigen/Core>
 #include "div_alpha.hpp"
