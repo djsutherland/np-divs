@@ -9,7 +9,8 @@ EIGEN    = /usr/local/include/eigen3/
 
 .PHONY: all clean cleanest
 all: np_divs
-div_funcs = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o
+div_funcs = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o \
+			div_hellinger.o utils.o
 
 ################################################################################
 ### Divergence estimator
@@ -44,6 +45,7 @@ div_hellinger.hpp: div_alpha.hpp
 ### Utilities
 
 gamma.o: gamma.hpp
+utils.o: utils.hpp
 
 ################################################################################
 ### Cleanup

@@ -81,8 +81,8 @@ fixed_terms(const Eigen::DenseBase<Derived> &v, double ub) {
     std::vector<Scalar> vec = as_vector(v);
     fix_terms(vec, ub);
 
-    return Eigen::Map<Eigen::Array<Scalar, Eigen::Dynamic, 1> >(
-            &vec[0], vec.size());
+    typedef Eigen::Map<Eigen::Array<Scalar, Eigen::Dynamic, 1> > map;
+    return map(&vec[0], vec.size());
 }
 
 #endif
