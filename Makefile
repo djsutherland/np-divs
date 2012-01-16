@@ -13,19 +13,20 @@ OBJS = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o \
 
 ################################################################################
 ### General rule for making .o files that respects .h dependencies
-### (based on http://scottmcpeak.com/autodepend/autodepend.html)
+### (based on http://www.makelinux.net/make3/make3-CHP-8-SECT-3)
 
 # pull in dependency info for preexisting .o files
 -include $(OBJS:.o=.d)
 
+# $(call make-depend, source-file, object-file, depend-file)
+define make-depend
+  $(CPP) -MM -MP -MT $2 $(CPPFLAGS) $(INCLUDE) $1 > $3
+endef
+
 # general rule for compiling and making dependency info
-# creates command-less, prereq-less targets to avoid errors when renaming files
 %.o: %.cpp
-	@# actual compilation
-	$(CPP) -c $(CPPFLAGS) $(INCLUDE) $*.cpp -o $*.o
-	@
-	@# cache mangled dependency info in filename.d
-	@$(CPP) -MM -MP $(CPPFLAGS) $(INCLUDE) $*.cpp > $*.d 
+	$(call make-depend,$<,$@,$(subst .o,.d,$@))
+	$(CPP) -c $(CPPFLAGS) $(INCLUDE) $<
 
 
 ################################################################################
