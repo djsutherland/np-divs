@@ -1,3 +1,5 @@
+#include "gamma.hpp"
+
 // based on code from http://www.crbond.com/math.htm:
 //
 //  gamma.cpp -- computation of gamma and log gamma functions.
@@ -6,8 +8,6 @@
 //
 //  (C) 2003, C. Bond. All rights reserved.
 
-
-#define _USE_MATH_DEFINES // to get M_PI
 #include <cmath>
 #include <stdexcept>
 

@@ -1,6 +1,6 @@
-#include <cmath>
-
 #include "div_renyi.hpp"
+
+#include <cmath>
 
 using Eigen::VectorXf;
 

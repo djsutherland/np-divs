@@ -1,8 +1,9 @@
+#include "div_alpha.hpp"
+
 #include <cmath>
 #include <stdexcept>
 #include <Eigen/Core>
 
-#include "div_alpha.hpp"
 #include "gamma.hpp"
 #include "utils.hpp"
 

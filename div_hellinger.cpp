@@ -1,6 +1,6 @@
-#include <cmath>
-
 #include "div_hellinger.hpp"
+
+#include <cmath>
 
 double DivHellinger::operator()(const Eigen::VectorXf &rho_x,
                                 const Eigen::VectorXf &nu_x,
