@@ -4,21 +4,21 @@ LDFLAGS = -lflann
 
 all: np_divs
 
-np_divs: np_divs.o div_l2.o div_func.o gamma_half.o
+np_divs: np_divs.o div_l2.o div_func.o gamma.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 np_divs.o: np_divs.cpp np_divs.hpp div_l2.hpp
 	$(CC) -c $(CFLAGS) $<
 np_divs.hpp: div_func.hpp
 
-div_l2.o: div_l2.cpp div_l2.hpp div_func.hpp utils.hpp gamma_half.hpp
+div_l2.o: div_l2.cpp div_l2.hpp div_func.hpp utils.hpp gamma.hpp
 	$(CC) -c $(CFLAGS) $<
 div_l2.hpp: div_func.hpp
 
 div_func.o: div_func.cpp div_func.hpp
 	$(CC) -c $(CFLAGS) $<
 
-gamma_half.o: gamma_half.cpp gamma_half.hpp
+gamma.o: gamma.cpp gamma.hpp
 	$(CC) -c $(CFLAGS) $<
 
 .PHONY: clean cleanest

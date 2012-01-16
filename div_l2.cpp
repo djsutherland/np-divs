@@ -6,7 +6,7 @@
 
 #include "div_l2.hpp"
 #include "utils.hpp"
-#include "gamma_half.hpp"
+#include "gamma.hpp"
 
 using Eigen::VectorXf;
 using Eigen::ArrayXf;
@@ -23,7 +23,7 @@ double DivL2::operator()(const VectorXf &rho_x,
     /* Estimates L2 divergence \sqrt \int (p-q)^2 between distribution X and Y,
      * based on kth-nearest-neighbor statistics.
      */
-    const double c = pow(M_PI, .5 * dim) / gamma_half(dim + 2);
+    const double c = pow(M_PI, .5 * dim) / gamma(dim/2.0 + 1);
     const double scale = (k-1) / c;
 
     int M = rho_x.size();
