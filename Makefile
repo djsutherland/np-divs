@@ -25,7 +25,7 @@ endef
 
 # general rule for compiling and making dependency info
 %.o: %.cpp
-	$(call make-depend,$<,$@,$(subst .o,.d,$@))
+	@$(call make-depend,$<,$@,$(subst .o,.d,$@))
 	$(CPP) -c $(CPPFLAGS) $(INCLUDE) $<
 
 
