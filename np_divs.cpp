@@ -18,55 +18,64 @@ using namespace std;
 
 void test_np_divs(const string fname="test_dists.hdf5") {
     typedef flann::Matrix<float> Matrix;
-    typedef vector<Matrix>::const_iterator c_iter;
 
-    vector<Matrix> bags_std1;
-    bags_std1.reserve(5);
-    for (int i = 1; i <= 5; i++) {
-        string path = (boost::format("gaussian1/%d") % i).str();
-
-        Matrix dataset;
-        flann::load_from_file(dataset, fname, path);
-
-        bags_std1.push_back(dataset);
+    // load bags
+#define NUM_STD1 5
+    Matrix* bags_std1 = new Matrix[NUM_STD1];
+    for (size_t i = 0; i < NUM_STD1; i++) {
+        string path = (boost::format("gaussian1/%d") % (i+1)).str();
+        flann::load_from_file(bags_std1[i], fname, path);
     }
 
-    vector<Matrix> bags_std2;
-    bags_std1.reserve(5);
-    for (int i = 1; i <= 5; i++) {
-        string path = (boost::format("gaussian2/%d") % i).str();
-
-        Matrix dataset;
-        flann::load_from_file(dataset, fname, path);
-
-        bags_std2.push_back(dataset);
+#define NUM_STD2 5
+    Matrix* bags_std2 = new Matrix[NUM_STD2];
+    for (size_t i = 0; i < NUM_STD2; i++) {
+        string path = (boost::format("gaussian2/%d") % (i+1)).str();
+        flann::load_from_file(bags_std2[i], fname, path);
     }
 
+    // combine bags into one array
+    Matrix* x_bags = new Matrix[NUM_STD1 + NUM_STD2];
+    for (size_t i = 0; i < NUM_STD1; i++)
+        x_bags[i] = bags_std1[i];
+    for (size_t i = 0; i < NUM_STD2; i++)
+        x_bags[i+NUM_STD2] = bags_std2[i];
+    size_t num_bags = NUM_STD1 + NUM_STD2;
+
+    // specify divergence functions
     boost::ptr_vector<DivFunc> div_funcs;
     div_funcs.push_back(new DivL2());
     div_funcs.push_back(new DivRenyi(.999));
     div_funcs.push_back(new DivHellinger());
 
-    vector<Matrix> x_bags;
-    x_bags.insert(x_bags.end(), bags_std1.begin(), bags_std2.end());
-    x_bags.insert(x_bags.end(), bags_std2.begin(), bags_std2.end());
+    size_t num_df = div_funcs.size();
 
-    vector<Matrix> divs = np_divs(x_bags, div_funcs, 3);
+    // preallocate results
+    Matrix* results = new Matrix[num_df];
+    for (size_t i = 0; i < num_df; i++) {
+        results[i] = Matrix(new float[num_bags*num_bags], num_bags, num_bags);
+    }
 
-    for (c_iter d = divs.begin(); d != divs.end(); d++) {
-        for (size_t i = 0; i < d->rows; i++) {
-            for (size_t j = 0; j < d-> cols; j++) {
-                cout << (*d)[i][j] << " ";
+    // compute!
+    np_divs(x_bags, NUM_STD1 + NUM_STD2, div_funcs, results, 3);
+
+    // print out results
+    for (size_t d = 0; d < num_df; d++) {
+        Matrix m = results[d];
+        for (size_t i = 0; i < m.rows; i++) {
+            for (size_t j = 0; j < m.cols; j++) {
+                cout << m[i][j] << " ";
             }
             cout << endl;
         }
         cout << endl << endl;
     }
 
-    for (c_iter i = bags_std1.begin(); i != bags_std1.end(); i++)
-        delete[] i->ptr();
-    for (c_iter i = bags_std2.begin(); i != bags_std2.end(); i++)
-        delete[] i->ptr();
+    // deallocate datesets
+    for (size_t i = 0; i < NUM_STD1; i++)
+        delete bags_std1[i].ptr();
+    for (size_t i = 0; i < NUM_STD2; i++)
+        delete bags_std2[i].ptr();
 }
 
 int main() {

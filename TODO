@@ -5,3 +5,5 @@
         - ie to do both BC and Hellinger
 
 - check for memory leaks
+
+- put everything into a namespace
