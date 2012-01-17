@@ -1,17 +1,11 @@
-This is a C++ implementation of Support Distribution Machines, including both
-the nonparametric divergence estimators described in
+This is a C++ implementation of Support Distribution Machines, implementing
+the nonparametric divergence estimators described in:
 
     Barnabas Poczos, Liang Xiong, and Jeff Schneider.
     Nonparametric divergence estimation with applications to machine learning
     on distributions.
     Uncertainty in Artificial Intelligence, 2011.
 
-and methods for hooking those estimators up to support vector machines for
-classification, regression, and anomaly detection.
-
-
 Requirements:
   * FLANN: people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
-  * Eigen 3: eigen.tuxfamily.org
-  * LIBSVM: csie.ntu.edu.tw/~cjlin/libsvm/
-  * A compiler that has std::isinf in <cmath> (g++/clang++ work)
+  * Boost: boost.org

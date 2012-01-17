@@ -11,13 +11,12 @@ std::vector<typename Distance::ResultType> DKN(
         const flann::Matrix<typename Distance::ElementType> &query,
         unsigned int k = 3,
         const flann::SearchParams &search_params = flann::SearchParams())
-{   /* Get the distances to the Kth nearest neighbor of each element in query
-     * using the passed index.
+{   /* Get the distances to the k-th nearest neighbor of each element in query
+     * using the passed index and search params.
      */
     using std::vector;
     using flann::Matrix;
 
-    typedef typename Distance::ElementType ElementType;
     typedef typename Distance::ResultType DistanceType;
 
     // matrices to store the results
@@ -32,7 +31,7 @@ std::vector<typename Distance::ResultType> DKN(
 
     // get out just the results we want
     vector<DistanceType> dkn;
-    dkn.reserve(query.rows());
+    dkn.reserve(query.rows);
     for (size_t i = 0; i < query.rows; i++) {
         dkn.push_back(query[i][k]);
     }

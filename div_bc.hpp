@@ -2,7 +2,6 @@
 #define DIV_BC_HPP
 #include "basics.hpp"
 
-#include <Eigen/Core>
 #include "div_alpha.hpp"
 
 class DivBC : public DivAlpha {
@@ -10,6 +9,9 @@ class DivBC : public DivAlpha {
 
     public:
         DivBC(double ub=.99) : super(.5, ub) {};
+
+    private:
+        DivBC* do_clone() const;
 };
 
 #endif

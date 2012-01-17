@@ -4,8 +4,4 @@
     - figure out some clever way to avoid repeated work in div funcs?
         - ie to do both BC and Hellinger
 
-- Do we really want to be using Eigen in so many places?
-
 - check for memory leaks
-
-- Implement SDM class

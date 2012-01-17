@@ -1,15 +1,14 @@
 CPP      = clang++
-CPPFLAGS = -Wall -g
-LDFLAGS  = -lflann
-EIGEN    = /usr/local/include/eigen3/
+CPPFLAGS = -Wall -g -O0
+LDFLAGS  = -lflann -lhdf5
 
-INCLUDE = -I$(EIGEN)
+INCLUDE =
 
 .PHONY: all clean cleanest
 all: np_divs
 
 OBJS = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o \
-	   np_divs.o dkn.o gamma.o utils.o
+	   np_divs.o dkn.o gamma.o fix_terms.o
 
 ################################################################################
 ### General rule for making .o files that respects .h dependencies

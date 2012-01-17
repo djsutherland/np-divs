@@ -2,7 +2,7 @@
 #define DIV_L2_HPP_
 #include "basics.hpp"
 
-#include <Eigen/Core>
+#include <vector>
 
 #include "div_func.hpp"
 
@@ -13,12 +13,15 @@ class DivL2 : public DivFunc {
         DivL2(double ub = .99);
 
         virtual double operator()(
-                const Eigen::VectorXf &rho_x,
-                const Eigen::VectorXf &nu_x,
-                const Eigen::VectorXf &rho_y,
-                const Eigen::VectorXf &nu_y,
+                const std::vector<float> &rho_x,
+                const std::vector<float> &nu_x,
+                const std::vector<float> &rho_y,
+                const std::vector<float> &nu_y,
                 unsigned int dim,
                 unsigned int k
             ) const;
+
+    private:
+        virtual DivL2* do_clone() const;
 };
 #endif

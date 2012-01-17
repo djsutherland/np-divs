@@ -1,43 +1,69 @@
 #include "div_l2.hpp"
 
+#include <algorithm>
+#include <cassert>
 #include <cmath>
+#include <numeric>
 #include <vector>
-#include <Eigen/Core>
 
+#include "fix_terms.hpp"
 #include "gamma.hpp"
-#include "utils.hpp"
 
-using Eigen::VectorXf;
-using Eigen::ArrayXf;
+using namespace std;
 
 DivL2::DivL2(double ub_) : DivFunc(ub_) {}
 
-double DivL2::operator()(const VectorXf &rho_x,
-                         const VectorXf &nu_x,
-                         const VectorXf &rho_y,
-                         const VectorXf &nu_y,
+class pow_mult {
+    double exp;
+    double mult;
+public:
+    pow_mult(double e, double m) : exp(e), mult(m) {}
+    double operator()(double x) {
+        return pow(x, exp) * mult;
+    }
+};
+
+double DivL2::operator()(const vector<float> &rho_x,
+                         const vector<float> &nu_x,
+                         const vector<float> &rho_y,
+                         const vector<float> &nu_y,
                          unsigned int dim,
                          unsigned int k) const {
     /* Estimates L2 divergence \sqrt \int (p-q)^2 between distribution X and Y,
      * based on kth-nearest-neighbor statistics.
      */
-    const double c = pow(M_PI, .5 * dim) / gamma(dim/2.0 + 1);
-    const double con = (k-1) / c;
+    const double c = (k-1) / pow(M_PI, .5 * dim) / gamma(dim/2.0 + 1);
 
-    int M = rho_x.size();
-    int N = rho_y.size();
+    int N = rho_x.size();
+    int M = rho_y.size();
+    assert (N == M); // Shouldn't be necessary, but code below assumes this
 
     // break up the calculation according to
-    // \sqrt \int (p - q)^2 = \sqrt( \int p^2 - \int pq - \int qp + \int q^2 )
-    const ArrayXf t1x = rho_x.array().pow(-dim) / (N-1); // \int p^2
-    const ArrayXf t3x =  nu_x.array().pow(-dim) / M;     // \int pq
-    const ArrayXf t3y =  nu_y.array().pow(-dim) / N;     // \int qp
-    const ArrayXf t1y = rho_y.array().pow(-dim) / (M-1); // \int q^2
+    // \sqrt \int (p - q)^2 = \sqrt( \int p^2 - \int qp - \int pq + \int q^2 )
+    vector<float> pp, qp, pq, qq;
+    pp.reserve(N); qp.reserve(N);
+    pq.reserve(M); qq.reserve(M);
 
-    // combine and throw away anything that's inf or otherwise too large
-    Eigen::Map<ArrayXf> final = fixed_terms((t1x - t3x - t3y + t1y) * con, ub);
+    //function<float (float)> common = bind(pow, _1, min_dim) * con;
+
+    transform(rho_x.begin(), rho_x.end(), pp.begin(), pow_mult(-dim, c/(N-1)));
+    transform( nu_x.begin(),  nu_x.end(), qp.begin(), pow_mult(-dim, c/  M  ));
+    transform( nu_y.begin(),  nu_y.end(), pq.begin(), pow_mult(-dim, c/  N  ));
+    transform(rho_y.begin(), rho_y.end(), qq.begin(), pow_mult(-dim, c/(M-1)));
+
+    // combine terms // FIXME: assumes N = M
+    for (size_t i = 0; i < N; i++) {
+        pp[i] += -qp[i] - pq[i] + qq[i];
+    }
+
+    // throw away anything too big
+    fix_terms(pp, ub);
 
     // take the mean and sqrt it
-    double res = final.sum() / final.size();
+    double res = accumulate(pp.begin(), pp.end(), 0) / N;
     return res > 0 ? sqrt(res) : 0;
+}
+
+DivL2* DivL2::do_clone() const {
+    return new DivL2(ub);
 }

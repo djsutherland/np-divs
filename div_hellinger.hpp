@@ -2,7 +2,8 @@
 #define DIV_HELLINGER_HPP
 #include "basics.hpp"
 
-#include <Eigen/Core>
+#include <vector>
+
 #include "div_alpha.hpp"
 
 class DivHellinger : public DivAlpha {
@@ -12,13 +13,16 @@ class DivHellinger : public DivAlpha {
         DivHellinger(double ub=.99) : super(.5, ub) {};
 
         virtual double operator()(
-                const Eigen::VectorXf &rho_x,
-                const Eigen::VectorXf &nu_x,
-                const Eigen::VectorXf &rho_y,
-                const Eigen::VectorXf &nu_y,
+                const std::vector<float> &rho_x,
+                const std::vector<float> &nu_x,
+                const std::vector<float> &rho_y,
+                const std::vector<float> &nu_y,
                 unsigned int dim,
                 unsigned int k
             ) const;
+
+    private:
+        DivHellinger* do_clone() const;
 };
 
 #endif
