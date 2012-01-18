@@ -16,6 +16,8 @@ std::vector<typename Distance::ResultType> DKN(
 {   /* Get the distances to the k-th nearest neighbor of each element in query
      * using the passed index and search params.
      *
+     * Make sure that the passed index objects have already done buildIndex().
+     *
      * Because flann::L2 is actually the squared Euclidean distance, this
      * function by default square-roots the results. Pass take_sqrt=false to
      * avoid this.
@@ -28,9 +30,6 @@ std::vector<typename Distance::ResultType> DKN(
     // matrices to store the results
     Matrix<int> indices(new int[query.rows*k], query.rows, k);
     Matrix<DistanceType> dists(new DistanceType[query.rows*k], query.rows, k);
-
-    // build the index if necessary
-    index.buildIndex();
 
     // search!
     index.knnSearch(query, indices, dists, k, search_params);

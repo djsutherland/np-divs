@@ -4,6 +4,8 @@
     - figure out some clever way to avoid repeated work in div funcs?
         - ie to do both BC and Hellinger
 
-- check for memory leaks
+- add more tests
 
 - put everything into a namespace
+
+- investigate valgrind's errors about uninitialized memory

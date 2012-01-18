@@ -1,5 +1,6 @@
 *.o
 *.d
 *.gch
+*.dSYM
 np_divs
 tests

@@ -74,11 +74,16 @@ void test_np_divs(const string fname="test_dists.hdf5") {
         cout << endl;
     }
 
-    // deallocate datesets
+    // deallocate datasets
     for (size_t i = 0; i < NUM_STD1; i++)
         delete bags_std1[i].ptr();
+    delete[] bags_std1;
     for (size_t i = 0; i < NUM_STD2; i++)
         delete bags_std2[i].ptr();
+    delete[] bags_std2;
+    delete[] x_bags;
+    for (size_t i = 0; i < num_df; i++)
+        delete[] results[i].ptr();
     delete[] results;
 }
 
