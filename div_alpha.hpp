@@ -18,8 +18,8 @@ class DivAlpha : public DivFunc {
         virtual double operator()(
                 const std::vector<float> &rho_x,
                 const std::vector<float> &nu_x,
-                unsigned int dim,
-                unsigned int k
+                int dim,
+                int k
             ) const;
 
         virtual double operator()(
@@ -27,8 +27,8 @@ class DivAlpha : public DivFunc {
                 const std::vector<float> &nu_x,
                 const std::vector<float> &rho_y,
                 const std::vector<float> &nu_y,
-                unsigned int dim,
-                unsigned int k
+                int dim,
+                int k
             ) const;
 
     private:

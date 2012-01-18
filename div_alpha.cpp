@@ -23,8 +23,8 @@ DivAlpha::DivAlpha(double alpha_, double ub_) : DivFunc(ub_) {
 
 double DivAlpha::operator()(const vector<float> &rho_x,
                             const vector<float> &nu_x,
-                            unsigned int dim,
-                            unsigned int k) const {
+                            int dim,
+                            int k) const {
     vector<float> fake;
     return (*this)(rho_x, nu_x, fake, fake, dim, k);
 }
@@ -33,23 +33,21 @@ double DivAlpha::operator()(const vector<float> &rho_x,
                             const vector<float> &nu_x,
                             const vector<float> &rho_y,
                             const vector<float> &nu_y,
-                            unsigned int dim,
-                            unsigned int k) const {
+                            int dim,
+                            int k) const {
     /* Estimates alpha-divergence \int p^\alpha q^(1-\alpha) based on
      * kth-nearest-neighbor statistics.
      *
      * Note that rho_y and nu_y are unused and may be empty. (They're there
      * to be consistent with the DivFunc interface.)
      */
-
     using namespace boost;
 
     size_t n = rho_x.size();
 
-    vector<float> r;
-    r.reserve(n);
-
     // r = rho_x ./ nu_x
+    vector<float> r;
+    r.resize(n);
     transform(rho_x.begin(), rho_x.end(), nu_x.begin(), r.begin(),
             divides<float>());
     

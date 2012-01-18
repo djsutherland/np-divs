@@ -9,8 +9,8 @@ double DivRenyi::operator()(const std::vector<float> &rho_x,
                             const std::vector<float> &nu_x,
                             const std::vector<float> &rho_y,
                             const std::vector<float> &nu_y,
-                            unsigned int dim,
-                            unsigned int k) const {
+                            int dim,
+                            int k) const {
     /* Estimates Renyi divergence \log (\int p^\alpha q^(1-\alpha)) / (\alpha-1)
      * based on kth-nearest-neighbor statistics.
      */

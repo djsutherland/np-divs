@@ -76,6 +76,7 @@ void test_np_divs(const string fname="test_dists.hdf5") {
         delete bags_std1[i].ptr();
     for (size_t i = 0; i < NUM_STD2; i++)
         delete bags_std2[i].ptr();
+    delete[] results;
 }
 
 int main() {

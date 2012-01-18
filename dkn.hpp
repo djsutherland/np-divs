@@ -9,7 +9,7 @@ template <typename Distance>
 std::vector<typename Distance::ResultType> DKN(
         flann::Index<Distance> &index,
         const flann::Matrix<typename Distance::ElementType> &query,
-        unsigned int k = 3,
+        int k = 3,
         const flann::SearchParams &search_params = flann::SearchParams())
 {   /* Get the distances to the k-th nearest neighbor of each element in query
      * using the passed index and search params.

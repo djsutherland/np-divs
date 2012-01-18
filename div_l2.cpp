@@ -9,17 +9,17 @@
 #include "fix_terms.hpp"
 #include "gamma.hpp"
 
-using namespace std;
+#include <iostream>
 
 DivL2::DivL2(double ub_) : DivFunc(ub_) {}
 
 class pow_mult {
-    double exp;
+    double ex;
     double mult;
 public:
-    pow_mult(double e, double m) : exp(e), mult(m) {}
+    pow_mult(double e, double m) : ex(e), mult(m) {}
     double operator()(double x) {
-        return pow(x, exp) * mult;
+        return pow(x, ex) * mult;
     }
 };
 
@@ -27,8 +27,8 @@ double DivL2::operator()(const vector<float> &rho_x,
                          const vector<float> &nu_x,
                          const vector<float> &rho_y,
                          const vector<float> &nu_y,
-                         unsigned int dim,
-                         unsigned int k) const {
+                         int dim,
+                         int k) const {
     /* Estimates L2 divergence \sqrt \int (p-q)^2 between distribution X and Y,
      * based on kth-nearest-neighbor statistics.
      */
@@ -41,10 +41,8 @@ double DivL2::operator()(const vector<float> &rho_x,
     // break up the calculation according to
     // \sqrt \int (p - q)^2 = \sqrt( \int p^2 - \int qp - \int pq + \int q^2 )
     vector<float> pp, qp, pq, qq;
-    pp.reserve(N); qp.reserve(N);
-    pq.reserve(M); qq.reserve(M);
-
-    //function<float (float)> common = bind(pow, _1, min_dim) * con;
+    pp.resize(N); qp.resize(N);
+    pq.resize(M); qq.resize(M);
 
     transform(rho_x.begin(), rho_x.end(), pp.begin(), pow_mult(-dim, c/(N-1)));
     transform( nu_x.begin(),  nu_x.end(), qp.begin(), pow_mult(-dim, c/  M  ));

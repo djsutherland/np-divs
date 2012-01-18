@@ -20,8 +20,8 @@ class DivFunc : boost::noncopyable {
                 const std::vector<float> &nu_x,
                 const std::vector<float> &rho_y,
                 const std::vector<float> &nu_y,
-                unsigned int dim,
-                unsigned int k
+                int dim,
+                int k
             ) const = 0;
 
         DivFunc* clone() const;
