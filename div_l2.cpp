@@ -60,8 +60,8 @@ double DivL2::operator()(const vector<float> &rho_x,
     fix_terms(pp, ub);
 
     // take the mean and sqrt it
-    double res = accumulate(pp.begin(), pp.end(), 0) / N;
-    return res > 0 ? sqrt(res) : 0;
+    double res = accumulate(pp.begin(), pp.end(), 0.) / N;
+    return res > 0 ? sqrt(res) : 0.;
 }
 
 DivL2* DivL2::do_clone() const {
