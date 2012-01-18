@@ -33,9 +33,13 @@ void fix_terms(std::vector<T> &terms, double ub = .99) {
     using std::max_element;
     using std::nth_element;
     using std::replace_if;
+    using std::remove_if;
 
     T cutoff;
     bool find_noninf_max = true;
+
+    // throw away any nans
+    remove_if(terms.begin(), terms.end(), boost::math::isnan<T>);
 
     // try finding the ub-th percentile
     if (ub < 1) {

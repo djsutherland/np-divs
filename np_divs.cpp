@@ -62,13 +62,14 @@ void test_np_divs(const string fname="test_dists.hdf5") {
     // print out results
     for (size_t d = 0; d < num_df; d++) {
         Matrix m = results[d];
+        cout << endl;
         for (size_t i = 0; i < m.rows; i++) {
             for (size_t j = 0; j < m.cols; j++) {
-                cout << m[i][j] << " ";
+                cout << boost::format("%.3f  ") % m[i][j];
             }
             cout << endl;
         }
-        cout << endl << endl;
+        cout << endl;
     }
 
     // deallocate datesets

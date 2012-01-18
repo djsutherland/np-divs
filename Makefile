@@ -1,6 +1,8 @@
 CPP      = clang++
 CPPFLAGS = -Wall -g -O0
+
 LDFLAGS  = -lflann -lhdf5
+GTEST    = -lgtest
 
 INCLUDE =
 
@@ -8,14 +10,15 @@ INCLUDE =
 all: np_divs
 
 OBJS = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o \
-	   np_divs.o dkn.o gamma.o fix_terms.o
+	   dkn.o gamma.o fix_terms.o
+ALLOBJS = $(OBJS) np_divs.o tests.o
 
 ################################################################################
 ### General rule for making .o files that respects .h dependencies
 ### (based on http://www.makelinux.net/make3/make3-CHP-8-SECT-3)
 
 # pull in dependency info for preexisting .o files
--include $(OBJS:.o=.d)
+-include $(ALLOBJS:.o=.d)
 
 # $(call make-depend, source-file, object-file, depend-file)
 define make-depend
@@ -29,13 +32,15 @@ endef
 
 
 ################################################################################
-### Divergence estimator
+### Binaries
 
-np_divs: $(OBJS)
+np_divs: np_divs.o $(OBJS)
 	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
+tests: tests.o $(OBJS)
+	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS) $(GTEST)
 
 ################################################################################
 ### Cleanup
 clean:
-	rm -f np_divs *.o *.d
+	rm -f np_divs tests *.o *.d
