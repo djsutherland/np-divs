@@ -2,6 +2,8 @@
 #define DIV_ALPHA_HPP_
 #include "basics.hpp"
 
+#include <boost/format.hpp>
+#include <string>
 #include <vector>
 
 #include "div_func.hpp"
@@ -14,6 +16,8 @@ class DivAlpha : public DivFunc {
 
     public:
         DivAlpha(double alpha=.999, double ub = .99);
+
+        virtual std::string name() const;
 
         virtual double operator()(
                 const std::vector<float> &rho_x,

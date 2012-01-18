@@ -3,7 +3,7 @@
 #include "basics.hpp"
 
 #include <boost/utility.hpp>
-
+#include <string>
 #include <vector>
 
 class DivFunc : boost::noncopyable {
@@ -14,6 +14,8 @@ class DivFunc : boost::noncopyable {
         DivFunc(double ub = .99);
 
         virtual ~DivFunc() {};
+
+        virtual std::string name() const = 0;
 
         virtual double operator()(
                 const std::vector<float> &rho_x,

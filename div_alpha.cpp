@@ -21,6 +21,10 @@ DivAlpha::DivAlpha(double alpha_, double ub_) : DivFunc(ub_) {
     alpha = alpha_;
 }
 
+string DivAlpha::name() const {
+    return (boost::format("Alpha %g divergence") % alpha).str();
+}
+
 
 double DivAlpha::operator()(const vector<float> &rho_x,
                             const vector<float> &nu_x,

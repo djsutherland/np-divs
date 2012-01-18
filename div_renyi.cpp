@@ -1,9 +1,14 @@
 #include "div_renyi.hpp"
 
+#include <boost/format.hpp>
 #include <cmath>
 #include <vector>
 
 DivRenyi::DivRenyi(double alpha, double ub) : super(alpha, ub) {}
+
+std::string DivRenyi::name() const {
+    return (boost::format("Renyi-%g divergence") % alpha).str();
+}
 
 double DivRenyi::operator()(const std::vector<float> &rho,
                             const std::vector<float> &nu,

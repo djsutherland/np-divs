@@ -2,6 +2,8 @@
 #define DIV_BC_HPP
 #include "basics.hpp"
 
+#include <string>
+
 #include "div_alpha.hpp"
 
 class DivBC : public DivAlpha {
@@ -9,6 +11,8 @@ class DivBC : public DivAlpha {
 
     public:
         DivBC(double ub=.99) : super(.5, ub) {};
+
+        virtual std::string name() const;
 
     private:
         DivBC* do_clone() const;

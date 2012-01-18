@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include "fix_terms.hpp"
@@ -14,6 +15,11 @@
 using namespace std;
 
 DivL2::DivL2(double ub_) : DivFunc(ub_) {}
+
+string DivL2::name() const {
+    return "L2 divergence";
+}
+
 
 class pow_mult {
     double ex;

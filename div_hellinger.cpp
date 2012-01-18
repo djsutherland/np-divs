@@ -1,6 +1,11 @@
 #include "div_hellinger.hpp"
 
 #include <cmath>
+#include <string>
+
+std::string DivHellinger::name() const {
+    return "Hellinger distance";
+}
 
 double DivHellinger::operator()(const std::vector<float> &rho,
                                 const std::vector<float> &nu,

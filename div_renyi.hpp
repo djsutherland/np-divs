@@ -2,6 +2,7 @@
 #define DIV_RENYI_HPP
 #include "basics.hpp"
 
+#include <string>
 #include <vector>
 
 #include "div_alpha.hpp"
@@ -11,6 +12,8 @@ class DivRenyi : public DivAlpha {
 
     public:
         DivRenyi(double alpha=.999, double ub=.99);
+
+        virtual std::string name() const;
 
         virtual double operator()(
                 const std::vector<float> &rho_x,

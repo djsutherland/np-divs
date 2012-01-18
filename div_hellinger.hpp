@@ -2,6 +2,7 @@
 #define DIV_HELLINGER_HPP
 #include "basics.hpp"
 
+#include <string>
 #include <vector>
 
 #include "div_alpha.hpp"
@@ -11,6 +12,8 @@ class DivHellinger : public DivAlpha {
 
     public:
         DivHellinger(double ub=.99) : super(.5, ub) {};
+
+        virtual std::string name() const;
 
         virtual double operator()(
                 const std::vector<float> &rho,

@@ -2,6 +2,7 @@
 #define DIV_L2_HPP_
 #include "basics.hpp"
 
+#include <string>
 #include <vector>
 
 #include "div_func.hpp"
@@ -11,6 +12,8 @@ class DivL2 : public DivFunc {
 
     public:
         DivL2(double ub = .99);
+
+        virtual std::string name() const;
 
         virtual double operator()(
                 const std::vector<float> &rho_x,
