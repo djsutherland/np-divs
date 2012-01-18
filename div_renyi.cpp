@@ -15,7 +15,7 @@ double DivRenyi::operator()(const std::vector<float> &rho,
      */
 
     double est = this->super::operator()(rho, nu, m, dim, k);
-    return est > 1 ? std::log(est) / (alpha - 1.0) : 0;
+    return std::max(0., std::log(est) / (alpha - 1.));
 }
 
 DivRenyi* DivRenyi::do_clone() const {

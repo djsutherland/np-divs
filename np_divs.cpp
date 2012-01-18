@@ -45,10 +45,10 @@ void test_np_divs(const string fname="test_dists.hdf5") {
 
     // specify divergence functions
     boost::ptr_vector<DivFunc> div_funcs;
-    // div_funcs.push_back(new DivL2());
-    // div_funcs.push_back(new DivRenyi(.999));
+    div_funcs.push_back(new DivL2());
+    div_funcs.push_back(new DivRenyi(.999));
     div_funcs.push_back(new DivHellinger());
-    // div_funcs.push_back(new DivBC());
+    div_funcs.push_back(new DivBC());
 
     size_t num_df = div_funcs.size();
 
