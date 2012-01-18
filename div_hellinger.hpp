@@ -13,10 +13,9 @@ class DivHellinger : public DivAlpha {
         DivHellinger(double ub=.99) : super(.5, ub) {};
 
         virtual double operator()(
-                const std::vector<float> &rho_x,
-                const std::vector<float> &nu_x,
-                const std::vector<float> &rho_y,
-                const std::vector<float> &nu_y,
+                const std::vector<float> &rho,
+                const std::vector<float> &nu,
+                int m,
                 int dim,
                 int k
             ) const;

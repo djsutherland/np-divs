@@ -18,6 +18,7 @@ class DivAlpha : public DivFunc {
         virtual double operator()(
                 const std::vector<float> &rho_x,
                 const std::vector<float> &nu_x,
+                int y_size,
                 int dim,
                 int k
             ) const;

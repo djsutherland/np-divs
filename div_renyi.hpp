@@ -15,8 +15,7 @@ class DivRenyi : public DivAlpha {
         virtual double operator()(
                 const std::vector<float> &rho_x,
                 const std::vector<float> &nu_x,
-                const std::vector<float> &rho_y,
-                const std::vector<float> &nu_y,
+                int m,
                 int dim,
                 int k
             ) const;

@@ -140,8 +140,8 @@ void np_divs(
         for (size_t j = 0; j < num_y; j++) {
             rho_y = y_rhos[j];
 
-            nu_x = DKN(*x_indices[i], y_bags[j], k, search_params);
-            nu_y = DKN(*y_indices[j], x_bags[i], k, search_params);
+            nu_x = DKN(*y_indices[j], x_bags[i], k, search_params);
+            nu_y = DKN(*x_indices[i], y_bags[j], k, search_params);
             // TODO - check that we actually need nu_y
             // TODO - if x_bags = y_bags, do both dirs in here at the same time
 
