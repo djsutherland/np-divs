@@ -52,24 +52,6 @@ void np_divs(
 }
 
 
-template <typename Distance>
-class _index_builder {
-    flann::IndexParams index_params;
-    typedef flann::Index<Distance> Index;
-
-    public:
-    _index_builder(const flann::IndexParams &index_params) :
-        index_params(index_params) {}
-
-    Index operator()(
-            const flann::Matrix<typename Distance::ElementType> &dataset)
-    const {
-        Index idx(dataset, index_params);
-        idx.buildIndex();
-        return idx;
-    }
-};
-
 // TODO: np_divs overload that writes into vector<vector<vector<float> > >
 
 template <typename Scalar>
@@ -80,20 +62,26 @@ void np_divs(
     flann::Matrix<float>* results,
     int k = 3,
     const flann::IndexParams &index_params = flann::KDTreeSingleIndexParams(),
-    const flann::SearchParams &search_params = flann::SearchParams(64))
+    const flann::SearchParams &search_params = flann::SearchParams(64),
+    bool verify_results_alloced = true)
 {   /* Calculates the matrix of divergences between x_bags and y_bags for
      * each of the passed div_funcs, and writes them into the preallocated
      * array of matrices (div_funcs.size() bags, each with num_x rows and
      * num_y cols) to the passed div_funcs. Rows of each matrix are an x_bag,
      * columns are a y_bag.
+     *
+     * By default, conducts a quick check that the result matrices were
+     * allocated properly; if you're sure that you did and want to skip this
+     * check, pass verify_results_alloced=false.
      */
 
-    // TODO - tune the flann indices -- just use autotuning?
+    // TODO - figure out how to tune flann indices (better than autotuning each)
 
     using std::transform;
     using std::vector;
 
     typedef flann::L2<Scalar> Distance;
+    typedef typename Distance::ResultType DistanceType;
 
     typedef flann::Matrix<Scalar> Matrix;
     typedef flann::Index<Distance> Index;
@@ -101,29 +89,26 @@ void np_divs(
     int num_dfs = div_funcs.size();
     int dim = x_bags[0].cols;
 
-
     // check that result matrices are allocated properly
-    for (size_t i = 0; i < div_funcs.size(); i++) {
-        flann::Matrix<float> m = results[i];
-        if (m.rows != num_x || m.cols != num_y) {
-            throw std::length_error(
-                (boost::format("expected matrix %d to be %dx%d; it's %d%d")
-                 % i % num_x % num_y % m.rows % m.cols).str()
-            );
+    if (verify_results_alloced) {
+        for (size_t i = 0; i < div_funcs.size(); i++) {
+            flann::Matrix<float> m = results[i];
+            if (m.rows != num_x || m.cols != num_y) {
+                throw std::length_error(
+                    (boost::format("expected matrix %d to be %dx%d; it's %d%d")
+                     % i % num_x % num_y % m.rows % m.cols).str()
+                );
+            }
         }
     }
 
-
     // build flann::Index objects for the bags
-    // const _index_builder<Distance> index_builder(index_params);
-
     Index** x_indices = (Index**) malloc(sizeof(Index*) * num_x);
     for (size_t i = 0; i < num_x; i++) {
         Index* idx = new Index(x_bags[i], index_params);
         idx->buildIndex();
         x_indices[i] = idx;
     }
-    //transform(&x_bags[0], &x_bags[num_x], &x_indices[0], index_builder);
 
     Index** y_indices = (Index**) malloc(sizeof(Index*) * num_y);
     for (size_t i = 0; i < num_y; i++) {
@@ -131,12 +116,10 @@ void np_divs(
         idx->buildIndex();
         y_indices[i] = idx;
     }
-    //transform(&y_bags[0], &y_bags[num_y], &y_indices[0], index_builder);
-
 
     // make rhos for the bags
     // TODO - check that we actually need the y_rhos
-    vector<vector<Scalar> > x_rhos, y_rhos;
+    vector<vector<DistanceType> > x_rhos, y_rhos;
 
     x_rhos.reserve(num_x);
     for (size_t i = 0; i < num_x; i++)
@@ -146,17 +129,15 @@ void np_divs(
     for (size_t j = 0; j < num_y; j++)
         y_rhos.push_back(DKN(*y_indices[j], y_bags[j], k+1, search_params));
 
-
     // compute the divergences!
-    // TODO: threading
     Matrix x_bag, y_bag;
-    vector<Scalar> rho_x, nu_x, rho_y, nu_y;
+    vector<DistanceType> rho_x, nu_x, rho_y, nu_y;
 
+    // TODO: threading
     for (size_t i = 0; i < num_x; i++) {
-        x_bag = x_bags[i];
-        rho_x = x_rhos[i];
+        rho_x = x_rhos[i]; // TODO - is this copying????
+
         for (size_t j = 0; j < num_y; j++) {
-            y_bag = y_bags[j];
             rho_y = y_rhos[j];
 
             nu_x = DKN(*x_indices[i], y_bags[j], k, search_params);
