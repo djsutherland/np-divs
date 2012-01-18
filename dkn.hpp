@@ -21,7 +21,7 @@ std::vector<typename Distance::ResultType> DKN(
 
     // matrices to store the results
     Matrix<int> indices(new int[query.rows*k], query.rows, k);
-    Matrix<DistanceType> dists(new float[query.rows*k], query.rows, k);
+    Matrix<DistanceType> dists(new DistanceType[query.rows*k], query.rows, k);
 
     // build the index if necessary
     index.buildIndex();
@@ -33,7 +33,7 @@ std::vector<typename Distance::ResultType> DKN(
     vector<DistanceType> dkn;
     dkn.reserve(query.rows);
     for (size_t i = 0; i < query.rows; i++) {
-        dkn.push_back(query[i][k]);
+        dkn.push_back(dists[i][k-1]);
     }
 
     delete[] indices.ptr();
