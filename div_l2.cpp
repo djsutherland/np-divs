@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+using namespace std;
+
 DivL2::DivL2(double ub_) : DivFunc(ub_) {}
 
 class pow_mult {
@@ -40,7 +42,7 @@ double DivL2::operator()(const vector<float> &rho_x,
 
     // break up the calculation according to
     // \sqrt \int (p - q)^2 = \sqrt( \int p^2 - \int qp - \int pq + \int q^2 )
-    vector<float> pp, qp, pq, qq;
+    vector<double> pp, qp, pq, qq;
     pp.resize(N); qp.resize(N);
     pq.resize(M); qq.resize(M);
 
