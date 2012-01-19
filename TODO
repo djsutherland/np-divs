@@ -9,6 +9,7 @@
 - don't compute both directions unless a div func needs both
 
 - add more tests?
+    - especially one that's not 2D
 
 - investigate the (smallish) differences from matlab results
 
