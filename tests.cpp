@@ -42,7 +42,6 @@ class NPDivTest : public ::testing::Test {
     const SearchParams search_params;
 };
 
-// Tests that DKN works properly in a specific 2d case
 TEST_F(NPDivTest, DKNTwoD) {
     float d[] = { -2.999, -5.672,
                   -9.051, -1.417,
@@ -138,7 +137,6 @@ class NPDivGaussiansTest : public NPDivTest {
     Matrix* expected;
 };
 
-// Tests a bunch of divergence functions on data from test_dists.hdf5
 TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelf) {
     Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
 
