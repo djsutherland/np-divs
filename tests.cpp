@@ -142,6 +142,7 @@ class NPDivGaussiansTest : public NPDivTest {
 TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelf) {
     Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
 
+    // compute
     np_divs(bags, num_bags, div_funcs, results, 3, index_params, search_params);
 
     // compare to expectations
@@ -156,33 +157,32 @@ TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelf) {
 }
 
 TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwo) {
-    // copy out the upper-right block of expected, which is what we really want
-    Matrix* real_expected = new Matrix[num_df];
-    for (size_t df = 0; df < num_df; df++) {
-        real_expected[df] = Matrix(new float[num_per_group*num_per_group],
-                                   num_per_group, num_per_group);
-        for (size_t i = 0; i < num_per_group; i++) {
-            for (size_t j = 0; j < num_per_group; j++) {
-                real_expected[df][i][j] = expected[df][i][num_per_group + j];
-            }
-        }
-    }
-
     Matrix* results =
         alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
 
+    // copy out the upper-right block of expected, which is what we really want
+    Matrix* real_expected =
+        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+
+    for (size_t df = 0; df < num_df; df++)
+        for (size_t i = 0; i < num_per_group; i++)
+            for (size_t j = 0; j < num_per_group; j++)
+                real_expected[df][i][j] = expected[df][i][num_per_group + j];
+
+    // compute
     np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
             div_funcs, results, 3, index_params, search_params);
 
-    // // compare to expectations
-    // for (size_t df = 0; df < num_df; df++)
-    //     for (size_t i = 0; i < num_bags; i++)
-    //         for (size_t j = 0; j < num_bags; j++)
-    //             EXPECT_NEAR(results[df][i][j], real_expected[df][i][j], .015)
-    //                 << boost::format("Big difference for df=%d, i=%d, j=%d")
-    //                    % df % i % j;
+    // compare to expectations
+    for (size_t df = 0; df < num_df; df++)
+        for (size_t i = 0; i < num_per_group; i++)
+            for (size_t j = 0; j < num_per_group; j++)
+                EXPECT_NEAR(results[df][i][j], real_expected[df][i][j], .015)
+                    << boost::format("Big difference for df=%d, i=%d, j=%d")
+                       % df % i % j;
 
     free_matrix_array(results, num_df);
+    free_matrix_array(real_expected, num_df);
 }
 
 } // end namespace
