@@ -8,6 +8,7 @@ the nonparametric divergence estimators described in:
 
 Requirements:
   * FLANN (people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN)
+  * Boost (boost.org)
 
 Optional dependencies:
   * HDF5 (http://www.hdfgroup.org/HDF5/)
@@ -15,6 +16,3 @@ Optional dependencies:
 Testing requirements:
   * HDF5
   * Google Test (code.google.com/p/googletest/)
-
-Build requirements:
-  * Boost (boost.org)

@@ -5,12 +5,16 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <queue>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/format.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/thread.hpp>
+
 #include <flann/flann.hpp>
 
 #include "div_func.hpp"
@@ -33,6 +37,14 @@ void free_matrix_array(flann::Matrix<Scalar> *array, size_t n);
 
 #define INDEX_PARAMS flann::KDTreeSingleIndexParams()
 #define SEARCH_PARAMS flann::SearchParams(64)
+// TODO - figure out how to tune flann indices (better than autotuning each)
+
+#define DEFAULT_DIV_FUNCS \
+  boost::ptr_vector<DivFunc> div_funcs; \
+  div_funcs.push_back(new DivL2());
+
+// TODO: np_divs overloads that write into a vector<vector<vector<float> > >,
+//       or something similar
 
 template <typename Scalar>
 void np_divs(
@@ -42,6 +54,7 @@ void np_divs(
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
+    size_t num_threads = 0,
     bool verify_results_alloced = true);
 
 template <typename Scalar>
@@ -53,6 +66,7 @@ void np_divs(
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
+    size_t num_threads = 0,
     bool verify_results_alloced = true);
 
 template <typename Scalar>
@@ -65,6 +79,7 @@ void np_divs(
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
+    size_t num_threads = 0,
     bool verify_results_alloced = true);
 
 template <typename Scalar>
@@ -76,12 +91,15 @@ void np_divs(
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
+    size_t num_threads = 0,
     bool verify_results_alloced = true);
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Declarations of helpers used in the code below
+
+inline size_t get_num_threads(size_t num_threads);
 
 template <typename T>
 void verify_allocated(
@@ -109,6 +127,43 @@ std::vector<std::vector<typename Distance::ResultType> > get_rhos(
         bool actually_do_it = true);
 // bool arg is a hack so it's easier to define refs that you might not need
 
+template <typename Distance>
+class divcalc_worker_thread {
+    typedef flann::Matrix<typename Distance::ElementType> Matrix;
+    typedef flann::Index<Distance> Index;
+    typedef std::vector<typename Distance::ResultType> DistVec;
+    typedef std::vector<DistVec> DistVecVec;
+    typedef std::pair<size_t, size_t> size_pair;
+
+    const Matrix *x_bags, *y_bags;
+    Index **x_indices, **y_indices;
+    const std::vector<DistVec> &x_rhos, &y_rhos;
+    const boost::ptr_vector<DivFunc> &div_funcs;
+    int k; int dim;
+    const flann::SearchParams &search_params;
+    Matrix *results;
+    boost::mutex &jobs_lock;
+    std::queue<size_pair> &jobs;
+
+    public:
+    divcalc_worker_thread(const Matrix *x_bags, const Matrix *y_bags,
+                          Index **x_indices, Index **y_indices,
+                          const DistVecVec &x_rhos, const DistVecVec &y_rhos,
+                          const boost::ptr_vector<DivFunc> &div_funcs,
+                          int k, int dim,
+                          const flann::SearchParams &search_params,
+                          Matrix *results,
+                          boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
+        :
+            x_bags(x_bags), y_bags(y_bags),
+            x_indices(x_indices), y_indices(y_indices),
+            x_rhos(x_rhos), y_rhos(y_rhos),
+            div_funcs(div_funcs), k(k), dim(dim), search_params(search_params),
+            results(results), jobs_lock(jobs_lock), jobs(jobs)
+        { }
+
+    void operator()();
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementations of the np_divs overloads
@@ -120,10 +175,13 @@ void np_divs(
         int k,
         const flann::IndexParams &index_params,
         const flann::SearchParams &search_params,
+        size_t num_threads,
         bool verify_results_alloced)
 {
-    return np_divs(bags, num_bags, NULL, num_bags, results, k,
-            index_params, search_params, verify_results_alloced);
+    DEFAULT_DIV_FUNCS
+
+    return np_divs(bags, num_bags, div_funcs, results, k, index_params,
+            search_params, num_threads, verify_results_alloced);
 }
 
 template <typename Scalar>
@@ -135,6 +193,7 @@ void np_divs(
         int k,
         const flann::IndexParams &index_params,
         const flann::SearchParams &search_params,
+        size_t num_threads,
         bool verify_results_alloced)
 {
     using std::vector;
@@ -152,6 +211,8 @@ void np_divs(
     if (verify_results_alloced)
         verify_allocated(results, num_dfs, num_bags, num_bags);
 
+    num_threads = get_num_threads(num_threads);
+
     Index** indices = make_indices<Distance>(bags, num_bags, index_params);
 
     const vector<DistVec> &rhos =
@@ -162,7 +223,6 @@ void np_divs(
         const Matrix &x_bag = bags[i];
         Index &x_index = *indices[i];
         const DistVec &rho_x = rhos[i];
-
 
         // calculate the nu from x_bag to itself
         // TODO - is this actually what we want?
@@ -206,17 +266,16 @@ void np_divs(
         int k,
         const flann::IndexParams &index_params,
         const flann::SearchParams &search_params,
+        size_t num_threads,
         bool verify_results_alloced)
 {
-    boost::ptr_vector<DivFunc> div_funcs;
-    div_funcs.push_back(new DivL2());
+    DEFAULT_DIV_FUNCS
 
     return np_divs(x_bags, num_x, y_bags, num_y, div_funcs, results, k,
-            index_params, search_params, verify_results_alloced);
+            index_params, search_params, num_threads, verify_results_alloced);
 }
 
 
-// TODO: np_divs overload that writes into vector<vector<vector<float> > >
 
 template <typename Scalar>
 void np_divs(
@@ -227,6 +286,7 @@ void np_divs(
     int k,
     const flann::IndexParams &index_params,
     const flann::SearchParams &search_params,
+    size_t num_threads,
     bool verify_results_alloced)
 {   /* Calculates the matrix of divergences between x_bags and y_bags for
      * each of the passed div_funcs, and writes them into the preallocated
@@ -234,12 +294,16 @@ void np_divs(
      * num_y cols) to the passed div_funcs. Rows of each matrix are an x_bag,
      * columns are a y_bag.
      *
+     * Runs on num_threads threads; if num_threads is 0 (the default), uses one
+     * thread per core/hyperthreading unit, as determined by
+     * boost::thread::hardware_concurrency (or 1 if that information is
+     * unavailable). If num_threads is 1, doesn't actually spawn any new
+     * threads.
+     *
      * By default, conducts a quick check that the result matrices were
      * allocated properly; if you're sure that you did and want to skip this
      * check, pass verify_results_alloced=false.
      */
-
-    // TODO - figure out how to tune flann indices (better than autotuning each)
 
     using std::vector;
 
@@ -252,12 +316,15 @@ void np_divs(
     // are we actually comparing bags with themselves?
     // if so, this overload is somewhat more efficient
     if (y_bags == NULL || y_bags == x_bags)
-        return np_divs(x_bags, num_x, div_funcs, results, k,
-                index_params, search_params, verify_results_alloced);
+        return np_divs(x_bags, num_x, div_funcs, results, k, index_params,
+                search_params, num_threads, verify_results_alloced);
 
     // initial setup work
     size_t num_dfs = div_funcs.size();
     size_t dim = x_bags[0].cols;
+    // TODO: check that y_bags[0] (all bags?) is the same dimensions
+
+    num_threads = get_num_threads(num_threads);
 
     if (verify_results_alloced)
         verify_allocated(results, num_dfs, num_x, num_y);
@@ -272,32 +339,59 @@ void np_divs(
 
     // compute the divergences!
     //
-    // TODO: threading
-    // think about:
-    //    how should threads be split up?
-    //    use plain threads (boost?) or TBB?
-    //    precompute the necessary stuff, or do locking to compute as needed?
-    //
     // TODO - check that we actually need nu_y
 
-    for (size_t i = 0; i < num_x; i++) {
-        const Matrix &x_bag = x_bags[i];
-        Index &x_index = *x_indices[i];
-        const DistVec &rho_x = x_rhos[i];
+    if (num_threads <= 1) {
+        for (size_t i = 0; i < num_x; i++) {
+            const Matrix &x_bag = x_bags[i];
+            Index &x_index = *x_indices[i];
+            const DistVec &rho_x = x_rhos[i];
 
-        for (size_t j = 0; j < num_y; j++) {
-            const Matrix &y_bag = y_bags[j];
-            Index &y_index = *y_indices[j];
-            const DistVec &rho_y = y_rhos[j];
+            for (size_t j = 0; j < num_y; j++) {
+                const Matrix &y_bag = y_bags[j];
+                Index &y_index = *y_indices[j];
+                const DistVec &rho_y = y_rhos[j];
 
-            const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
-            const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
+                const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
+                const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
 
-            for (size_t df = 0; df < num_dfs; df++) {
-                results[df][i][j] = div_funcs[df](
-                        rho_x, nu_x, rho_y, nu_y, dim, k);
+                for (size_t df = 0; df < num_dfs; df++) {
+                    results[df][i][j] = div_funcs[df](
+                            rho_x, nu_x, rho_y, nu_y, dim, k);
+                }
             }
         }
+    } else {
+        // this queue will tell threads what to do
+        std::queue<std::pair<size_t, size_t> > jobs;
+        for (size_t i = 0; i < num_x; i++)
+            for (size_t j = 0; j < num_y; j++)
+                jobs.push(std::pair<size_t, size_t>(i, j));
+
+        boost::mutex jobs_lock; // to avoid simultaneous access
+        // simultaneous writes into results should be safe, since
+        // it's just direct memory access with no bookkeeping, and nothing
+        // else is modified.
+
+        // launch worker threads
+        // we keep the divcalc_worker_thread objects in this ptr_vector so
+        // that they don't get copied but also have the correct lifetime
+        boost::ptr_vector<divcalc_worker_thread<Distance> > workers;
+        boost::thread_group worker_threads;
+
+        for (size_t i = 0; i < num_threads; i++) {
+            // create the worker
+            // note that anything that isn't passed as a boost::ref here
+            // will be copied. it's okay to copy pointers, though...
+
+            workers.push_back(new divcalc_worker_thread<Distance>(
+                x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
+                div_funcs, k, dim, search_params, results, jobs_lock, jobs
+            ));
+            worker_threads.create_thread(boost::ref(workers[i]));
+        }
+
+        worker_threads.join_all();
     }
 
     free_indices(x_indices, num_x);
@@ -306,6 +400,45 @@ void np_divs(
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementations of helpers
+
+template <typename Distance>
+void divcalc_worker_thread<Distance>::operator()() {
+    size_t num_dfs = div_funcs.size();
+
+    while (1) {
+        // get our next job
+        jobs_lock.lock();
+
+        if (jobs.size() == 0) {
+            jobs_lock.unlock();
+            break;
+        }
+
+        size_pair job = jobs.front();
+        jobs.pop();
+        size_t i = job.first, j = job.second;
+
+        jobs_lock.unlock();
+
+
+        // load up references to things we'll need
+        const Matrix &x_bag = x_bags[i];
+        const Matrix &y_bag = y_bags[j];
+        Index &x_index = *x_indices[i];
+        Index &y_index = *y_indices[j];
+        const DistVec &rho_x = x_rhos[i];
+        const DistVec &rho_y = y_rhos[j];
+
+        // compute away
+        const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
+        const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
+
+        for (size_t df = 0; df < num_dfs; df++) {
+            results[df][i][j] =
+                div_funcs[df](rho_x, nu_x, rho_y, nu_y, dim, k);
+        }
+    }
+}
 
 template <typename Scalar>
 flann::Matrix<Scalar>* alloc_matrix_array(size_t n, size_t rows, size_t cols) {
@@ -323,6 +456,12 @@ void free_matrix_array(flann::Matrix<Scalar> *array, size_t n) {
     for (size_t i = 0; i < n; i++)
         delete[] array[i].ptr();
     delete[] array;
+}
+
+size_t get_num_threads(size_t num_threads) {
+    if (num_threads == 0)
+        num_threads = boost::thread::hardware_concurrency();
+    return num_threads > 0 ? num_threads : 1;
 }
 
 template <typename T>

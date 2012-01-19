@@ -1,7 +1,7 @@
 CPP      = clang++
 CPPFLAGS = -Wall -g -O0
 
-LDFLAGS  = -lflann -lhdf5
+LDFLAGS  = -lflann -lhdf5 -lboost_thread-mt
 GTEST    = -lgtest
 
 INCLUDE =

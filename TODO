@@ -8,9 +8,13 @@
 
 - don't compute both directions unless a div func needs both
 
-- add more tests?
+- more tests
     - especially one that's not 2D
 
 - investigate the (smallish) differences from matlab results
+    - fix_terms being a little different?
+    - are the rhos/nus the same?
 
 - investigate valgrind's errors about uninitialized memory
+
+- switch to cmake
