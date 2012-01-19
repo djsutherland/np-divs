@@ -17,24 +17,27 @@
 
 using namespace boost::assign; // for vector +=
 using namespace std;
-using namespace flann;
 using namespace NPDivs;
+
+using flann::load_from_file;
+using flann::Index;
+using flann::IndexParams;
+using flann::SearchParams;
+using flann::L2;
+
+typedef flann::Matrix<float> Matrix;
 
 namespace {
 
 class NPDivTest : public ::testing::Test {
     protected:
 
-    NPDivTest() : index_params(AutotunedIndexParams(.99, 0, 0, 1)),
-                  search_params(SearchParams(FLANN_CHECKS_AUTOTUNED)) {
-        // setup work
-    }
+    NPDivTest() : index_params(flann::KDTreeSingleIndexParams()),
+                  search_params(SearchParams())
+    {}
 
-    virtual ~NPDivTest() {
-        // cleanup work
-    }
+    virtual ~NPDivTest() {}
 
-    // objects common to tests
     const IndexParams index_params;
     const SearchParams search_params;
 };
@@ -51,13 +54,13 @@ TEST_F(NPDivTest, DKNTwoD) {
                   -7.356, -9.513,
                   -2.687,  2.312,
                   -9.168, -2.966 };
-    Matrix<float> dataset(d, 10, 2);
+    Matrix dataset(d, 10, 2);
 
     float q[] = { -2.920, -9.522,
                    2.363,  6.885,
                    0.963,  4.673,
                    6.671,  0.481 };
-    Matrix<float> query(q, 4, 2);
+    Matrix query(q, 4, 2);
 
     vector<float> expected;
     expected += 3.8511, 7.3594, 5.2820, 4.6111;
@@ -72,82 +75,118 @@ TEST_F(NPDivTest, DKNTwoD) {
 }
 
 
-// Tests a bunch of divergence functions on data from test_dists.hdf5
-TEST_F(NPDivTest, NPDivsGaussiansToSelf) {
-    using flann::load_from_file;
+class NPDivGaussiansTest : public NPDivTest {
+    typedef NPDivTest super;
 
-    typedef flann::Matrix<float> Matrix;
+    protected:
+    NPDivGaussiansTest() :
+        fname("test_dists.hdf5"),
+        num_groups(2),
+        num_per_group(5),
+        num_bags(num_groups * num_per_group),
+        bags(new Matrix[num_bags]),
 
-    // load datasets
-    const size_t num_groups = 2;
-    const size_t num_per_group = 5;
-    const size_t num_bags = num_groups * num_per_group;
+        num_df(4),
+        expected(new Matrix[num_df])
+    {
+        // load bags
+        boost::format path("gaussian/%d/%d");
+        for (size_t group = 0; group < num_groups; group++) {
+            for (size_t i = 0; i < num_per_group; i++) {
+                load_from_file(
+                        bags[group*num_per_group + i],
+                        fname, (path % (group+1) % (i+1)).str());
+            }
+        }
 
-    const string fname = "test_dists.hdf5";
-    boost::format path("gaussian/%d/%d");
+        // specify divergence functions
+        div_funcs.push_back(new DivL2());
+        div_funcs.push_back(new DivRenyi(.999));
+        div_funcs.push_back(new DivHellinger());
+        div_funcs.push_back(new DivBC());
+        ASSERT_EQ(div_funcs.size(), num_df);
 
-    Matrix* bags = new Matrix[num_bags];
-    for (size_t group = 0; group < num_groups; group++) {
-        for (size_t i = 0; i < num_per_group; i++) {
-            load_from_file(
-                    bags[group*num_per_group + i],
-                    fname, (path % (group+1) % (i+1)).str());
+        // load expectations
+        for (size_t i = 0; i < num_df; i++) {
+            load_from_file(expected[i],
+                    fname, "gaussian/divs/" + div_funcs[i].name());
+            ASSERT_EQ(expected[i].rows, num_bags);
+            ASSERT_EQ(expected[i].cols, num_bags);
         }
     }
 
-    // specify divergence functions
+    virtual ~NPDivGaussiansTest() {
+        // free bags
+        for (size_t i = 0; i < num_bags; i++)
+            delete[] bags[i].ptr();
+        delete[] bags;
+
+        // free expected
+        for (size_t i = 0; i < num_df; i++)
+            delete[] expected[i].ptr();
+        delete[] expected;
+    }
+
+    const string fname;
+    const size_t num_groups;
+    const size_t num_per_group;
+    const size_t num_bags;
+    Matrix* bags;
+
     boost::ptr_vector<DivFunc> div_funcs;
-    div_funcs.push_back(new DivL2());
-    div_funcs.push_back(new DivRenyi(.999));
-    div_funcs.push_back(new DivHellinger());
-    div_funcs.push_back(new DivBC());
+    const size_t num_df;
+    Matrix* expected;
+};
 
-    const size_t num_df = div_funcs.size();
+// Tests a bunch of divergence functions on data from test_dists.hdf5
+TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelf) {
+    Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
 
-    // load expectations
-    Matrix* expected = new Matrix[num_df];
-    for (size_t i = 0; i < num_df; i++) {
-        load_from_file(expected[i],
-                fname, "gaussian/divs/" + div_funcs[i].name());
-        ASSERT_EQ(expected[i].rows, num_bags);
-        ASSERT_EQ(expected[i].cols, num_bags);
-    }
-
-    // preallocate results
-    Matrix* results = new Matrix[num_df];
-    for (size_t i = 0; i < num_df; i++) {
-        results[i] = Matrix(new float[num_bags*num_bags], num_bags, num_bags);
-    }
-
-    // compute!
-    np_divs(bags, num_bags, div_funcs, results, 3);
+    np_divs(bags, num_bags, div_funcs, results, 3, index_params, search_params);
 
     // compare to expectations
     for (size_t df = 0; df < num_df; df++)
         for (size_t i = 0; i < num_bags; i++)
             for (size_t j = 0; j < num_bags; j++)
-                EXPECT_NEAR(results[df][i][j], expected[df][i][j], .015) <<
-                    boost::format("Big difference for df=%d, i=%d, j=%d")
-                    % df % i % j;
+                EXPECT_NEAR(results[df][i][j], expected[df][i][j], .015)
+                    << boost::format("Big difference for df=%d, i=%d, j=%d")
+                       % df % i % j;
 
-    // deallocate datasets
-    for (size_t i = 0; i < num_bags; i++)
-        delete[] bags[i].ptr();
-    delete[] bags;
-
-    // deallocate expectations
-    for (size_t i = 0; i < num_df; i++)
-        delete[] expected[i].ptr();
-    delete[] expected;
-
-    // deallocate results
-    for (size_t i = 0; i < num_df; i++)
-        delete[] results[i].ptr();
-    delete[] results;
+    free_matrix_array(results, num_df);
 }
 
+TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwo) {
+    // copy out the upper-right block of expected, which is what we really want
+    Matrix* real_expected = new Matrix[num_df];
+    for (size_t df = 0; df < num_df; df++) {
+        real_expected[df] = Matrix(new float[num_per_group*num_per_group],
+                                   num_per_group, num_per_group);
+        for (size_t i = 0; i < num_per_group; i++) {
+            for (size_t j = 0; j < num_per_group; j++) {
+                real_expected[df][i][j] = expected[df][i][num_per_group + j];
+            }
+        }
+    }
 
+    Matrix* results =
+        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+
+    np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
+            div_funcs, results, 3, index_params, search_params);
+
+    // // compare to expectations
+    // for (size_t df = 0; df < num_df; df++)
+    //     for (size_t i = 0; i < num_bags; i++)
+    //         for (size_t j = 0; j < num_bags; j++)
+    //             EXPECT_NEAR(results[df][i][j], real_expected[df][i][j], .015)
+    //                 << boost::format("Big difference for df=%d, i=%d, j=%d")
+    //                    % df % i % j;
+
+    free_matrix_array(results, num_df);
 }
+
+} // end namespace
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

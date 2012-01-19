@@ -4,7 +4,9 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <boost/format.hpp>
@@ -16,6 +18,25 @@
 #include "dkn.hpp"
 
 namespace NPDivs {
+
+template <typename Scalar>
+flann::Matrix<Scalar>* alloc_matrix_array(size_t n, size_t rows, size_t cols) {
+    typedef flann::Matrix<Scalar> Matrix;
+    size_t s = rows * cols;
+
+    Matrix* array = new Matrix[n];
+    for (size_t i = 0; i < n; i++)
+        array[i] = Matrix(new Scalar[s], rows, cols);
+    return array;
+}
+
+template <typename Scalar>
+void free_matrix_array(flann::Matrix<Scalar> *array, size_t n) {
+    for (size_t i = 0; i < n; i++)
+        delete[] array[i].ptr();
+    delete[] array;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Declarations of the main np_divs functions
@@ -126,9 +147,65 @@ void np_divs(
         const flann::SearchParams &search_params,
         bool verify_results_alloced)
 {
-    return np_divs(bags, num_bags, (flann::Matrix<Scalar>*) NULL, num_bags,
-            div_funcs, results, k, index_params, search_params,
-            verify_results_alloced);
+    using std::vector;
+
+    typedef flann::L2<Scalar> Distance;
+
+    typedef flann::Matrix<Scalar> Matrix;
+    typedef flann::Index<Distance> Index;
+    typedef vector<typename Distance::ResultType> DistVec;
+
+    size_t num_dfs = div_funcs.size();
+    size_t dim = bags[0].cols;
+
+    // some setup
+    if (verify_results_alloced)
+        verify_allocated(results, num_dfs, num_bags, num_bags);
+
+    Index** indices = make_indices<Distance>(bags, num_bags, index_params);
+
+    const vector<DistVec> &rhos =
+        get_rhos(bags, indices, num_bags, k, search_params);
+
+    // compute away!
+    for (size_t i = 0; i < num_bags; i++) {
+        const Matrix &x_bag = bags[i];
+        Index &x_index = *indices[i];
+        const DistVec &rho_x = rhos[i];
+
+
+        // calculate the nu from x_bag to itself
+        // TODO - is this actually what we want?
+        const DistVec &nu_xx = DKN(x_index, x_bag, k, search_params);
+
+        // compare with self
+        for (size_t df = 0; df < num_dfs; df++) {
+            results[df][i][i] = div_funcs[df](
+                    rho_x, nu_xx, rho_x, nu_xx, dim, k);
+        }
+
+        // compare with others (both to and from)
+        for (size_t j = 0; j < i; j++) {
+            const Matrix &y_bag = bags[j];
+            Index &y_index = *indices[j];
+            const DistVec &rho_y = rhos[j];
+
+            const DistVec nu_x = DKN(
+                    y_index, x_bag, k, search_params);
+            const DistVec nu_y = DKN(
+                    x_index, y_bag, k, search_params);
+
+            for (size_t df = 0; df < num_dfs; df++) {
+                results[df][i][j] = div_funcs[df](
+                        rho_x, nu_x, rho_y, nu_y, dim, k);
+                results[df][j][i] = div_funcs[df](
+                        rho_y, nu_y, rho_x, nu_x, dim, k);
+            }
+        }
+    }
+
+    free_indices(indices, num_bags);
+
 }
 
 template <typename Scalar>
@@ -182,28 +259,26 @@ void np_divs(
     typedef flann::Index<Distance> Index;
     typedef vector<typename Distance::ResultType> DistVec;
 
+    // are we actually comparing bags with themselves?
+    // if so, this overload is somewhat more efficient
+    if (y_bags == NULL || y_bags == x_bags)
+        return np_divs(x_bags, num_x, div_funcs, results, k,
+                index_params, search_params, verify_results_alloced);
+
+    // initial setup work
     size_t num_dfs = div_funcs.size();
     size_t dim = x_bags[0].cols;
 
-    // are we comparing bags with themselves?
-    bool bags_are_same = y_bags == NULL || y_bags == x_bags;
-    if (bags_are_same)
-        num_y = num_x;
-
-    // check that result matrices are allocated properly
     if (verify_results_alloced)
-        verify_allocated(results, div_funcs.size(), num_x, num_y);
+        verify_allocated(results, num_dfs, num_x, num_y);
 
-    // build flann::Index objects for the bags
     Index** x_indices = make_indices<Distance>(x_bags, num_x, index_params);
-    Index** y_indices = bags_are_same ? NULL :
-                        make_indices<Distance>(y_bags, num_y, index_params);
+    Index** y_indices = make_indices<Distance>(y_bags, num_y, index_params);
 
-    // make rhos for the bags
-    const vector<DistVec> &x_rhos = get_rhos<Distance>(
-            x_bags, x_indices, num_x, k, search_params);
-    const vector<DistVec> &y_rhos = get_rhos<Distance>(
-            y_bags, y_indices, num_y, k, search_params, !bags_are_same);
+    const vector<DistVec> &x_rhos =
+            get_rhos(x_bags, x_indices, num_x, k, search_params);
+    const vector<DistVec> &y_rhos =
+            get_rhos(y_bags, y_indices, num_y, k, search_params);
 
     // compute the divergences!
     //
@@ -215,69 +290,28 @@ void np_divs(
     //
     // TODO - check that we actually need nu_y
 
-    if (!bags_are_same) {
-        for (size_t i = 0; i < num_x; i++) {
-            const Matrix &x_bag = x_bags[i];
-            Index &x_index = *x_indices[i];
-            const DistVec &rho_x = x_rhos[i];
+    for (size_t i = 0; i < num_x; i++) {
+        const Matrix &x_bag = x_bags[i];
+        Index &x_index = *x_indices[i];
+        const DistVec &rho_x = x_rhos[i];
 
-            for (size_t j = 0; j < num_y; j++) {
-                const Matrix &y_bag = y_bags[j];
-                Index &y_index = *y_indices[j];
-                const DistVec &rho_y = y_rhos[j];
+        for (size_t j = 0; j < num_y; j++) {
+            const Matrix &y_bag = y_bags[j];
+            Index &y_index = *y_indices[j];
+            const DistVec &rho_y = y_rhos[j];
 
-                const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
-                const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
-
-                for (size_t df = 0; df < num_dfs; df++) {
-                    results[df][i][j] = div_funcs[df](
-                            rho_x, nu_x, rho_y, nu_y, dim, k);
-                }
-            }
-        }
-    } else {
-        // we can save some nearest-neighbor calculation by calculating both
-        // directions at the same time
-        for (size_t i = 0; i < num_x; i++) {
-            const Matrix &x_bag = x_bags[i];
-            Index &x_index = *x_indices[i];
-            const DistVec &rho_x = x_rhos[i];
-
-            // compare with self
-
-            // calculate the nu from x_bag to itself
-            // TODO - is this actually what we want?
-            const DistVec &nu_xx = DKN(x_index, x_bag, k, search_params);
+            const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
+            const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
 
             for (size_t df = 0; df < num_dfs; df++) {
-                results[df][i][i] = div_funcs[df](
-                        rho_x, nu_xx, rho_x, nu_xx, dim, k);
-            }
-
-            // compare with others
-            for (size_t j = 0; j < i; j++) {
-                const Matrix &y_bag = x_bags[j];
-                Index &y_index = *x_indices[j];
-                const DistVec &rho_y = x_rhos[j];
-
-                const DistVec nu_x = DKN(
-                        y_index, x_bag, k, search_params);
-                const DistVec nu_y = DKN(
-                        x_index, y_bag, k, search_params);
-
-                for (size_t df = 0; df < num_dfs; df++) {
-                    results[df][i][j] = div_funcs[df](
-                            rho_x, nu_x, rho_y, nu_y, dim, k);
-                    results[df][j][i] = div_funcs[df](
-                            rho_y, nu_y, rho_x, nu_x, dim, k);
-                }
+                results[df][i][j] = div_funcs[df](
+                        rho_x, nu_x, rho_y, nu_y, dim, k);
             }
         }
     }
 
     free_indices(x_indices, num_x);
-    if (!bags_are_same)
-        free_indices(y_indices, num_y);
+    free_indices(y_indices, num_y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,10 +325,11 @@ void verify_allocated(
     for (size_t i = 0; i < num_matrices; i++) {
         const flann::Matrix<T> &m = matrices[i];
         if (m.rows != rows || m.cols != cols) {
-            throw std::length_error(
-                (boost::format("expected matrix %d to be %dx%d; it's %d%d")
-                 % i % rows % cols % m.rows % m.cols).str()
-            );
+            boost::format err =
+                boost::format("expected matrix %d to be %dx%d; it's %d%d")
+                % i % rows % cols % m.rows % m.cols;
+            std::cerr << err << std::endl;
+            throw std::length_error(err.str());
         }
     }
 }
