@@ -27,6 +27,19 @@ using flann::L2;
 
 typedef flann::Matrix<float> Matrix;
 
+void expect_near_matrix_array(
+    const Matrix *results, const Matrix *expected, size_t num, float dist=.015)
+{
+    for (size_t n = 0; n < num; n++) {
+        const Matrix &m = results[n];
+        for (size_t i = 0; i < m.rows; i++)
+            for (size_t j = 0; j < m.cols; j++)
+                EXPECT_NEAR(results[n][i][j], expected[n][i][j], dist)
+                    << boost::format("Big difference for n=%d, i=%d, j=%d")
+                       % n % i % j;
+    }
+}
+
 namespace {
 
 class NPDivTest : public ::testing::Test {
@@ -137,24 +150,44 @@ class NPDivGaussiansTest : public NPDivTest {
     Matrix* expected;
 };
 
-TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelf) {
+
+TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfSingleThreaded) {
     Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
 
-    // compute
-    np_divs(bags, num_bags, div_funcs, results, 3, index_params, search_params);
+    np_divs(bags, num_bags, div_funcs, results, 3,
+            index_params, search_params, 1);
 
-    // compare to expectations
-    for (size_t df = 0; df < num_df; df++)
-        for (size_t i = 0; i < num_bags; i++)
-            for (size_t j = 0; j < num_bags; j++)
-                EXPECT_NEAR(results[df][i][j], expected[df][i][j], .015)
-                    << boost::format("Big difference for df=%d, i=%d, j=%d")
-                       % df % i % j;
+    expect_near_matrix_array(results, expected, num_df);
 
     free_matrix_array(results, num_df);
 }
 
-TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwo) {
+TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfTwoThreaded) {
+    Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
+
+    np_divs(bags, num_bags, div_funcs, results, 3,
+            index_params, search_params, 2);
+
+    expect_near_matrix_array(results, expected, num_df);
+
+    free_matrix_array(results, num_df);
+}
+
+TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfManyThreaded) {
+    Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
+
+    np_divs(bags, num_bags, div_funcs, results, 3,
+            index_params, search_params, 50);
+
+    expect_near_matrix_array(results, expected, num_df);
+
+    free_matrix_array(results, num_df);
+}
+
+
+
+
+TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoSingleThreaded) {
     Matrix* results =
         alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
 
@@ -169,19 +202,63 @@ TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwo) {
 
     // compute
     np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
-            div_funcs, results, 3, index_params, search_params);
+            div_funcs, results, 3, index_params, search_params, 1);
 
-    // compare to expectations
-    for (size_t df = 0; df < num_df; df++)
-        for (size_t i = 0; i < num_per_group; i++)
-            for (size_t j = 0; j < num_per_group; j++)
-                EXPECT_NEAR(results[df][i][j], real_expected[df][i][j], .015)
-                    << boost::format("Big difference for df=%d, i=%d, j=%d")
-                       % df % i % j;
+    // check
+    expect_near_matrix_array(results, real_expected, num_df);
 
     free_matrix_array(results, num_df);
     free_matrix_array(real_expected, num_df);
 }
+
+TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoTwoThreaded) {
+    Matrix* results =
+        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+
+    // copy out the upper-right block of expected, which is what we really want
+    Matrix* real_expected =
+        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+
+    for (size_t df = 0; df < num_df; df++)
+        for (size_t i = 0; i < num_per_group; i++)
+            for (size_t j = 0; j < num_per_group; j++)
+                real_expected[df][i][j] = expected[df][i][num_per_group + j];
+
+    // compute
+    np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
+            div_funcs, results, 3, index_params, search_params, 2);
+
+    // check
+    expect_near_matrix_array(results, real_expected, num_df);
+
+    free_matrix_array(results, num_df);
+    free_matrix_array(real_expected, num_df);
+}
+
+TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoManyThreaded) {
+    Matrix* results =
+        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+
+    // copy out the upper-right block of expected, which is what we really want
+    Matrix* real_expected =
+        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+
+    for (size_t df = 0; df < num_df; df++)
+        for (size_t i = 0; i < num_per_group; i++)
+            for (size_t j = 0; j < num_per_group; j++)
+                real_expected[df][i][j] = expected[df][i][num_per_group + j];
+
+    // compute
+    np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
+            div_funcs, results, 3, index_params, search_params, 50);
+
+    // check
+    expect_near_matrix_array(results, real_expected, num_df);
+
+    free_matrix_array(results, num_df);
+    free_matrix_array(real_expected, num_df);
+}
+
 
 } // end namespace
 
