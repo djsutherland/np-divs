@@ -1,7 +1,12 @@
-- Implement main estimator dealio (np_divs)
-    - decide on threading model
-    - figure out some clever way to avoid repeated work in div funcs?
-        - ie to do both BC and Hellinger
+- add multithreading
+
+- add a reasonable CLI
+
+- figure out some clever way to avoid repeated work in div funcs?
+    - ie to do both BC and Hellinger without recomputing the common alpha part
+    - possibly not worth the effort...
+
+- don't compute both directions unless a div func needs both
 
 - add more tests?
 

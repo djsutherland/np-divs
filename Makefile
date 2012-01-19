@@ -8,12 +8,12 @@ INCLUDE =
 
 .PHONY: all clean debug test
 
-all: np_divs
-debug: np_divs.dSYM tests.dSYM
+all: tests
+debug: tests.dSYM
 
 OBJS = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o \
-	   dkn.o gamma.o fix_terms.o
-ALLOBJS = $(OBJS) np_divs.o tests.o
+	   dkn.o gamma.o fix_terms.o np_divs.o
+ALLOBJS = $(OBJS) tests.o
 
 ################################################################################
 ### General rule for making .o files that respects .h dependencies
@@ -35,9 +35,6 @@ endef
 
 ################################################################################
 ### Binaries
-
-np_divs: np_divs.o $(OBJS)
-	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 tests: tests.o $(OBJS)
 	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS) $(GTEST)
