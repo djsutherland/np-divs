@@ -8,6 +8,8 @@
 
 #include "div_func.hpp"
 
+namespace NPDivs {
+
 class DivAlpha : public DivFunc {
     typedef DivFunc super;
 
@@ -39,4 +41,7 @@ class DivAlpha : public DivFunc {
     private:
         virtual DivAlpha* do_clone() const;
 };
+
+}
+
 #endif

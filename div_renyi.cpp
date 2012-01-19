@@ -4,6 +4,8 @@
 #include <cmath>
 #include <vector>
 
+namespace NPDivs {
+
 DivRenyi::DivRenyi(double alpha, double ub) : super(alpha, ub) {}
 
 std::string DivRenyi::name() const {
@@ -25,4 +27,6 @@ double DivRenyi::operator()(const std::vector<float> &rho,
 
 DivRenyi* DivRenyi::do_clone() const {
     return new DivRenyi(alpha, ub);
+}
+
 }

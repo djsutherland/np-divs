@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+namespace NPDivs {
+
 class DivFunc : boost::noncopyable {
     protected:
         double ub; // if ub is .99, will cap terms at the 99-th percentile
@@ -34,6 +36,8 @@ class DivFunc : boost::noncopyable {
 
 inline DivFunc* new_clone(const DivFunc &df) {
     return df.clone();
+}
+
 }
 
 #endif

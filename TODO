@@ -6,6 +6,4 @@
 
 - add more tests
 
-- put everything into a namespace
-
 - investigate valgrind's errors about uninitialized memory

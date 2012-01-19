@@ -6,6 +6,8 @@
 #include <vector>
 #include <flann/flann.hpp>
 
+namespace NPDivs {
+
 template <typename Distance>
 std::vector<typename Distance::ResultType> DKN(
         flann::Index<Distance> &index,
@@ -48,6 +50,8 @@ std::vector<typename Distance::ResultType> DKN(
     delete[] dists.ptr();
 
     return dkn;
+}
+
 }
 
 #endif

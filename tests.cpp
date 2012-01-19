@@ -52,7 +52,9 @@ TEST_F(DKNTest, DKNTwoD) {
     expected += 3.8511, 7.3594, 5.2820, 4.6111;
 
     Index<L2<float> > index(dataset, index_params);
-    vector<float> results = DKN(index, query, 2, search_params);
+    index.buildIndex();
+
+    vector<float> results = NPDivs::DKN(index, query, 2, search_params);
 
     for (size_t i = 0; i < expected.size(); i++)
         EXPECT_NEAR(results[i], expected[i], .01);

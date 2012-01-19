@@ -15,6 +15,7 @@
 
 // most code in header because it's templated
 
+using namespace NPDivs;
 using namespace std;
 
 void test_np_divs(const string fname="test_dists.hdf5") {

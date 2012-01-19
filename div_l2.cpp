@@ -12,6 +12,8 @@
 
 #include <iostream>
 
+namespace NPDivs {
+
 using namespace std;
 
 DivL2::DivL2(double ub_) : DivFunc(ub_) {}
@@ -72,4 +74,6 @@ double DivL2::operator()(const vector<float> &rho_x,
 
 DivL2* DivL2::do_clone() const {
     return new DivL2(ub);
+}
+
 }

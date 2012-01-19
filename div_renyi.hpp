@@ -7,6 +7,8 @@
 
 #include "div_alpha.hpp"
 
+namespace NPDivs {
+
 class DivRenyi : public DivAlpha {
     typedef DivAlpha super;
 
@@ -27,4 +29,5 @@ class DivRenyi : public DivAlpha {
         virtual DivRenyi* do_clone() const;
 };
 
+}
 #endif

@@ -6,6 +6,8 @@
 
 #include "div_alpha.hpp"
 
+namespace NPDivs {
+
 class DivBC : public DivAlpha {
     typedef DivAlpha super;
 
@@ -17,5 +19,7 @@ class DivBC : public DivAlpha {
     private:
         DivBC* do_clone() const;
 };
+
+}
 
 #endif

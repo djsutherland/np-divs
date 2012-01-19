@@ -12,6 +12,8 @@
 #include "fix_terms.hpp"
 #include "gamma.hpp"
 
+namespace NPDivs {
+
 using namespace std;
 
 DivAlpha::DivAlpha(double alpha_, double ub_) : DivFunc(ub_) {
@@ -78,4 +80,6 @@ double DivAlpha::operator()(const vector<float> &rho,
 
 DivAlpha* DivAlpha::do_clone() const {
     return new DivAlpha(alpha, ub);
+}
+
 }

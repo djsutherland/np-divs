@@ -7,7 +7,7 @@
 
 #include <boost/math/special_functions.hpp>
 
-// code in here because templates are silly :/
+namespace NPDivs {
 
 template <typename T>
 bool cmp_with_inf(T i, T j) { return boost::math::isinf(i) || i < j; }
@@ -57,6 +57,8 @@ void fix_terms(std::vector<T> &terms, double ub = .99) {
 
     // replace anything greater than cutoff with cutoff
     replace_if(terms.begin(), terms.end(), greater_than<T>(cutoff), cutoff);
+}
+
 }
 
 #endif

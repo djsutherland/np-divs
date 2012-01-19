@@ -11,6 +11,8 @@
 #include <cmath>
 #include <stdexcept>
 
+namespace NPDivs {
+
 using namespace std;
 
 
@@ -147,4 +149,6 @@ double lgamma(double x) {
         }
     }
     return gl;
+}
+
 }

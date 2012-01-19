@@ -7,6 +7,8 @@
 
 #include "div_alpha.hpp"
 
+namespace NPDivs {
+
 class DivHellinger : public DivAlpha {
     typedef DivAlpha super;
 
@@ -26,5 +28,7 @@ class DivHellinger : public DivAlpha {
     private:
         DivHellinger* do_clone() const;
 };
+
+}
 
 #endif

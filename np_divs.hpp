@@ -15,6 +15,8 @@
 #include "div_l2.hpp"
 #include "dkn.hpp"
 
+namespace NPDivs {
+
 template <typename Scalar>
 void np_divs(
         const flann::Matrix<Scalar> *bags, size_t num_bags,
@@ -165,4 +167,5 @@ void np_divs(
     free(y_indices);
 }
 
+}
 #endif
