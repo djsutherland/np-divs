@@ -10,6 +10,7 @@ INCLUDE =
 
 all: tests
 debug: tests.dSYM
+	gdb ./tests
 
 OBJS = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o \
 	   dkn.o gamma.o fix_terms.o np_divs.o
