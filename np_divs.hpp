@@ -17,37 +17,135 @@
 
 namespace NPDivs {
 
+////////////////////////////////////////////////////////////////////////////////
+// Declarations of the main np_divs functions
+
+#define INDEX_PARAMS flann::KDTreeSingleIndexParams()
+#define SEARCH_PARAMS flann::SearchParams(64)
+
 template <typename Scalar>
 void np_divs(
-        const flann::Matrix<Scalar> *bags, size_t num_bags,
-        flann::Matrix<Scalar>* results,
-        int k = 3)
+    const flann::Matrix<Scalar> *bags,
+    size_t num_bags,
+    flann::Matrix<float> *results,
+    int k = 3,
+    const flann::IndexParams &index_params = INDEX_PARAMS,
+    const flann::SearchParams &search_params = SEARCH_PARAMS,
+    bool verify_results_alloced = true);
+
+template <typename Scalar>
+void np_divs(
+    const flann::Matrix<Scalar> *bags,
+    size_t num_bags,
+    const boost::ptr_vector<DivFunc> &div_funcs,
+    flann::Matrix<float> *results,
+    int k = 3,
+    const flann::IndexParams &index_params = INDEX_PARAMS,
+    const flann::SearchParams &search_params = SEARCH_PARAMS,
+    bool verify_results_alloced = true);
+
+template <typename Scalar>
+void np_divs(
+    const flann::Matrix<Scalar> *x_bags,
+    size_t num_x,
+    const flann::Matrix<Scalar> *y_bags,
+    size_t num_y,
+    flann::Matrix<float>* results,
+    int k = 3,
+    const flann::IndexParams &index_params = INDEX_PARAMS,
+    const flann::SearchParams &search_params = SEARCH_PARAMS,
+    bool verify_results_alloced = true);
+
+template <typename Scalar>
+void np_divs(
+    const flann::Matrix<Scalar> *x_bags, size_t num_x,
+    const flann::Matrix<Scalar> *y_bags, size_t num_y,
+    const boost::ptr_vector<DivFunc> &div_funcs,
+    flann::Matrix<float>* results,
+    int k = 3,
+    const flann::IndexParams &index_params = INDEX_PARAMS,
+    const flann::SearchParams &search_params = SEARCH_PARAMS,
+    bool verify_results_alloced = true);
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Declarations of helpers used in the code below
+
+template <typename T>
+void verify_allocated(
+        flann::Matrix<T> *matrices,
+        size_t num_matrices, size_t rows, size_t cols);
+// throws a std::length_error if they're not the right size
+
+template <typename Distance>
+flann::Index<Distance>** make_indices(
+        const flann::Matrix<typename Distance::ElementType> *datasets,
+        size_t n,
+        const flann::IndexParams index_params);
+
+template <typename Distance>
+inline void free_indices(flann::Index<Distance>** indices, size_t n);
+
+
+template <typename Distance>
+std::vector<std::vector<typename Distance::ResultType> > get_rhos(
+        const flann::Matrix<typename Distance::ElementType> *bags,
+        flann::Index<Distance> **indices,
+        size_t n,
+        int k,
+        const flann::SearchParams &search_params = SEARCH_PARAMS,
+        bool actually_do_it = true);
+// bool arg is a hack so it's easier to define refs that you might not need
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Implementations of the np_divs overloads
+template <typename Scalar>
+void np_divs(
+        const flann::Matrix<Scalar> *bags,
+        size_t num_bags,
+        flann::Matrix<float>* results,
+        int k,
+        const flann::IndexParams &index_params,
+        const flann::SearchParams &search_params,
+        bool verify_results_alloced)
 {
-    return np_divs(bags, num_bags, NULL, num_bags, results, k);
+    return np_divs(bags, num_bags, NULL, num_bags, results, k,
+            index_params, search_params, verify_results_alloced);
 }
 
 template <typename Scalar>
 void np_divs(
-        const flann::Matrix<Scalar> *bags, size_t num_bags,
+        const flann::Matrix<Scalar> *bags,
+        size_t num_bags,
         const boost::ptr_vector<DivFunc> &div_funcs,
-        flann::Matrix<Scalar>* results,
-        int k = 3)
+        flann::Matrix<float>* results,
+        int k,
+        const flann::IndexParams &index_params,
+        const flann::SearchParams &search_params,
+        bool verify_results_alloced)
 {
     return np_divs(bags, num_bags, (flann::Matrix<Scalar>*) NULL, num_bags,
-            div_funcs, results, k);
+            div_funcs, results, k, index_params, search_params,
+            verify_results_alloced);
 }
 
 template <typename Scalar>
 void np_divs(
         const flann::Matrix<Scalar> *x_bags, size_t num_x,
         const flann::Matrix<Scalar> *y_bags, size_t num_y,
-        flann::Matrix<Scalar>* results,
-        int k = 3)
+        flann::Matrix<float>* results,
+        int k,
+        const flann::IndexParams &index_params,
+        const flann::SearchParams &search_params,
+        bool verify_results_alloced)
 {
     boost::ptr_vector<DivFunc> div_funcs;
     div_funcs.push_back(new DivL2());
 
-    return np_divs(x_bags, num_x, y_bags, num_y, div_funcs, results, k);
+    return np_divs(x_bags, num_x, y_bags, num_y, div_funcs, results, k,
+            index_params, search_params, verify_results_alloced);
 }
 
 
@@ -59,10 +157,10 @@ void np_divs(
     const flann::Matrix<Scalar>* y_bags, size_t num_y,
     const boost::ptr_vector<DivFunc> &div_funcs,
     flann::Matrix<float>* results,
-    int k = 3,
-    const flann::IndexParams &index_params = flann::KDTreeSingleIndexParams(),
-    const flann::SearchParams &search_params = flann::SearchParams(64),
-    bool verify_results_alloced = true)
+    int k,
+    const flann::IndexParams &index_params,
+    const flann::SearchParams &search_params,
+    bool verify_results_alloced)
 {   /* Calculates the matrix of divergences between x_bags and y_bags for
      * each of the passed div_funcs, and writes them into the preallocated
      * array of matrices (div_funcs.size() bags, each with num_x rows and
@@ -76,7 +174,6 @@ void np_divs(
 
     // TODO - figure out how to tune flann indices (better than autotuning each)
 
-    using std::transform;
     using std::vector;
 
     typedef flann::L2<Scalar> Distance;
@@ -85,69 +182,52 @@ void np_divs(
     typedef flann::Index<Distance> Index;
     typedef vector<typename Distance::ResultType> DistVec;
 
-    int num_dfs = div_funcs.size();
-    int dim = x_bags[0].cols;
+    size_t num_dfs = div_funcs.size();
+    size_t dim = x_bags[0].cols;
 
-    bool bags_are_same = y_bags == NULL || x_bags == y_bags;
+    // are we comparing bags with themselves?
+    bool bags_are_same = y_bags == NULL || y_bags == x_bags;
+    if (bags_are_same)
+        num_y = num_x;
 
     // check that result matrices are allocated properly
-    if (verify_results_alloced) {
-        for (size_t i = 0; i < div_funcs.size(); i++) {
-            flann::Matrix<float> m = results[i];
-            if (m.rows != num_x || m.cols != num_y) {
-                throw std::length_error(
-                    (boost::format("expected matrix %d to be %dx%d; it's %d%d")
-                     % i % num_x % num_y % m.rows % m.cols).str()
-                );
-            }
-        }
-    }
+    if (verify_results_alloced)
+        verify_allocated(results, div_funcs.size(), num_x, num_y);
 
     // build flann::Index objects for the bags
-    Index** x_indices = (Index**) malloc(sizeof(Index*) * num_x);
-    Index** y_indices;
-
-    for (size_t i = 0; i < num_x; i++) {
-        Index* idx = new Index(x_bags[i], index_params);
-        idx->buildIndex();
-        x_indices[i] = idx;
-    }
-
-    if (!bags_are_same) {
-        y_indices = (Index**) malloc(sizeof(Index*) * num_y);
-        for (size_t i = 0; i < num_y; i++) {
-            Index* idx = new Index(y_bags[i], index_params);
-            idx->buildIndex();
-            y_indices[i] = idx;
-        }
-    }
+    Index** x_indices = make_indices<Distance>(x_bags, num_x, index_params);
+    Index** y_indices = bags_are_same ? NULL :
+                        make_indices<Distance>(y_bags, num_y, index_params);
 
     // make rhos for the bags
-    // TODO - check that we actually need the y_rhos
-    vector<DistVec> x_rhos, y_rhos;
-    x_rhos.reserve(num_x);
-    for (size_t i = 0; i < num_x; i++)
-        x_rhos.push_back(DKN(*x_indices[i], x_bags[i], k+1, search_params));
+    const vector<DistVec> &x_rhos = get_rhos<Distance>(
+            x_bags, x_indices, num_x, k, search_params);
+    const vector<DistVec> &y_rhos = get_rhos<Distance>(
+            y_bags, y_indices, num_y, k, search_params, !bags_are_same);
 
-    if (!bags_are_same) {
-        y_rhos.reserve(num_y);
-        for (size_t j = 0; j < num_y; j++)
-            y_rhos.push_back(DKN(*y_indices[j], y_bags[j], k+1, search_params));
-    }
-
-    // compute the divergences!  // TODO: threading
-    DistVec nu_x, nu_y;
-
+    // compute the divergences!
+    //
+    // TODO: threading
+    // think about:
+    //    how should threads be split up?
+    //    use plain threads (boost?) or TBB?
+    //    precompute the necessary stuff, or do locking to compute as needed?
+    //
     // TODO - check that we actually need nu_y
 
     if (!bags_are_same) {
         for (size_t i = 0; i < num_x; i++) {
-            DistVec &rho_x = x_rhos[i];
-            for (size_t j = 0; j < num_y; j++) {
-                DistVec &rho_y = y_rhos[j];
+            const Matrix &x_bag = x_bags[i];
+            Index &x_index = *x_indices[i];
+            const DistVec &rho_x = x_rhos[i];
 
-                DistVec nu_x = DKN(*y_indices[j], x_bags[i], k, search_params);
-                nu_y = DKN(*x_indices[i], y_bags[j], k, search_params);
+            for (size_t j = 0; j < num_y; j++) {
+                const Matrix &y_bag = y_bags[j];
+                Index &y_index = *y_indices[j];
+                const DistVec &rho_y = y_rhos[j];
+
+                const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
+                const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
 
                 for (size_t df = 0; df < num_dfs; df++) {
                     results[df][i][j] = div_funcs[df](
@@ -159,20 +239,31 @@ void np_divs(
         // we can save some nearest-neighbor calculation by calculating both
         // directions at the same time
         for (size_t i = 0; i < num_x; i++) {
-            DistVec &rho_x = x_rhos[i];
+            const Matrix &x_bag = x_bags[i];
+            Index &x_index = *x_indices[i];
+            const DistVec &rho_x = x_rhos[i];
 
             // compare with self
+
+            // calculate the nu from x_bag to itself
+            // TODO - is this actually what we want?
+            const DistVec &nu_xx = DKN(x_index, x_bag, k, search_params);
+
             for (size_t df = 0; df < num_dfs; df++) {
                 results[df][i][i] = div_funcs[df](
-                        rho_x, rho_x, rho_x, rho_x, dim, k);
+                        rho_x, nu_xx, rho_x, nu_xx, dim, k);
             }
 
             // compare with others
-            for (size_t j = 0; j <= i; j++) {
-                DistVec &rho_y = x_rhos[j];
+            for (size_t j = 0; j < i; j++) {
+                const Matrix &y_bag = x_bags[j];
+                Index &y_index = *x_indices[j];
+                const DistVec &rho_y = x_rhos[j];
 
-                nu_x = DKN(*x_indices[j], x_bags[i], k, search_params);
-                nu_y = DKN(*x_indices[i], x_bags[j], k, search_params);
+                const DistVec nu_x = DKN(
+                        y_index, x_bag, k, search_params);
+                const DistVec nu_y = DKN(
+                        x_index, y_bag, k, search_params);
 
                 for (size_t df = 0; df < num_dfs; df++) {
                     results[df][i][j] = div_funcs[df](
@@ -184,21 +275,75 @@ void np_divs(
         }
     }
 
-    // think about:
-    //    how should threads be split up?
-    //    use plain threads (boost?) or TBB?
-    //    precompute the necessary stuff, or do locking to compute as needed?
+    free_indices(x_indices, num_x);
+    if (!bags_are_same)
+        free_indices(y_indices, num_y);
+}
 
-    for (size_t i = 0; i < num_x; i++)
-        delete x_indices[i];
-    free(x_indices);
+////////////////////////////////////////////////////////////////////////////////
+// Implementations of helpers
 
-    if (!bags_are_same) {
-        for (size_t i = 0; i < num_y; i++)
-            delete y_indices[i];
-        free(y_indices);
+template <typename T>
+void verify_allocated(
+        flann::Matrix<T> *matrices, size_t num_matrices,
+        size_t rows, size_t cols)
+{
+    for (size_t i = 0; i < num_matrices; i++) {
+        const flann::Matrix<T> &m = matrices[i];
+        if (m.rows != rows || m.cols != cols) {
+            throw std::length_error(
+                (boost::format("expected matrix %d to be %dx%d; it's %d%d")
+                 % i % rows % cols % m.rows % m.cols).str()
+            );
+        }
     }
 }
 
+template <typename Distance>
+flann::Index<Distance>** make_indices(
+        const flann::Matrix<typename Distance::ElementType> *datasets,
+        size_t number,
+        const flann::IndexParams index_params)
+{
+    typedef flann::Index<Distance> Index;
+
+    // malloc to avoid calling constructors
+    Index** indices = (Index**) malloc(sizeof(Index*) * number);
+
+    for (size_t i = 0; i < number; i++) {
+        Index* idx = new Index(datasets[i], index_params);
+        idx->buildIndex();
+        indices[i] = idx;
+    }
+
+    return indices;
 }
+
+template <typename Distance>
+void free_indices(flann::Index<Distance>** indices, size_t n) {
+    for (size_t i = 0; i < n; i++)
+        delete indices[i];
+    free(indices);
+}
+
+
+template <typename Distance>
+std::vector<std::vector<typename Distance::ResultType> > get_rhos(
+        const flann::Matrix<typename Distance::ElementType> *bags,
+        flann::Index<Distance> **indices,
+        size_t n,
+        int k,
+        const flann::SearchParams &search_params,
+        bool actually_do_it)
+{
+    std::vector<std::vector<typename Distance::ResultType> > rhos;
+    if (actually_do_it) {
+        rhos.reserve(n);
+        for (size_t i = 0; i < n; i++)
+            rhos.push_back(DKN(*indices[i], bags[i], k+1, search_params));
+    }
+    return rhos;
+}
+
+} // close namespace
 #endif

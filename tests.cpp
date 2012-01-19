@@ -79,9 +79,9 @@ TEST_F(NPDivTest, NPDivsGaussiansToSelf) {
     typedef flann::Matrix<float> Matrix;
 
     // load datasets
-    const int num_groups = 2;
-    const int num_per_group = 5;
-    const int num_bags = num_groups * num_per_group;
+    const size_t num_groups = 2;
+    const size_t num_per_group = 5;
+    const size_t num_bags = num_groups * num_per_group;
 
     const string fname = "test_dists.hdf5";
     boost::format path("gaussian/%d/%d");

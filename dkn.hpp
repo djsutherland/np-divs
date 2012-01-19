@@ -19,6 +19,7 @@ std::vector<typename Distance::ResultType> DKN(
      * using the passed index and search params.
      *
      * Make sure that the passed index objects have already done buildIndex().
+     * Since FLANN searches are thread-safe, so is this function.
      *
      * Because flann::L2 is actually the squared Euclidean distance, this
      * function by default square-roots the results. Pass take_sqrt=false to
