@@ -6,8 +6,9 @@ GTEST    = -lgtest
 
 INCLUDE =
 
-.PHONY: all clean cleanest
+.PHONY: all clean debug
 all: np_divs
+debug: np_divs.dSYM tests
 
 OBJS = div_func.o div_l2.o div_alpha.o div_renyi.o div_bc.o div_hellinger.o \
 	   dkn.o gamma.o fix_terms.o
@@ -39,6 +40,10 @@ np_divs: np_divs.o $(OBJS)
 
 tests: tests.o $(OBJS)
 	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS) $(GTEST)
+
+np_divs.dSYM: np_divs
+	dsymutil np_divs
+
 
 ################################################################################
 ### Cleanup
