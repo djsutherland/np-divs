@@ -3,9 +3,18 @@ the nonparametric divergence estimators described in:
 
     Barnabas Poczos, Liang Xiong, and Jeff Schneider.
     Nonparametric divergence estimation with applications to machine learning
-    on distributions.
+        on distributions.
     Uncertainty in Artificial Intelligence, 2011.
 
 Requirements:
-  * FLANN: people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
-  * Boost: boost.org
+  * FLANN (people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN)
+
+Optional dependencies:
+  * HDF5 (http://www.hdfgroup.org/HDF5/)
+
+Testing requirements:
+  * HDF5
+  * Google Test (code.google.com/p/googletest/)
+
+Build requirements:
+  * Boost (boost.org)

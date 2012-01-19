@@ -3,6 +3,8 @@
     - figure out some clever way to avoid repeated work in div funcs?
         - ie to do both BC and Hellinger
 
-- add more tests
+- add more tests?
+
+- investigate the (smallish) differences from matlab results
 
 - investigate valgrind's errors about uninitialized memory

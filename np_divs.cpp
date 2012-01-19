@@ -25,14 +25,14 @@ void test_np_divs(const string fname="test_dists.hdf5") {
 #define NUM_STD1 5
     Matrix* bags_std1 = new Matrix[NUM_STD1];
     for (size_t i = 0; i < NUM_STD1; i++) {
-        string path = (boost::format("gaussian1/%d") % (i+1)).str();
+        string path = (boost::format("gaussian/1/%d") % (i+1)).str();
         flann::load_from_file(bags_std1[i], fname, path);
     }
 
 #define NUM_STD2 5
     Matrix* bags_std2 = new Matrix[NUM_STD2];
     for (size_t i = 0; i < NUM_STD2; i++) {
-        string path = (boost::format("gaussian2/%d") % (i+1)).str();
+        string path = (boost::format("gaussian/2/%d") % (i+1)).str();
         flann::load_from_file(bags_std2[i], fname, path);
     }
 
