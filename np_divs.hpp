@@ -19,24 +19,14 @@
 
 namespace NPDivs {
 
-template <typename Scalar>
-flann::Matrix<Scalar>* alloc_matrix_array(size_t n, size_t rows, size_t cols) {
-    typedef flann::Matrix<Scalar> Matrix;
-    size_t s = rows * cols;
-
-    Matrix* array = new Matrix[n];
-    for (size_t i = 0; i < n; i++)
-        array[i] = Matrix(new Scalar[s], rows, cols);
-    return array;
-}
+////////////////////////////////////////////////////////////////////////////////
+// Some functions that are helpful for allocating/freeing matrix arrays
 
 template <typename Scalar>
-void free_matrix_array(flann::Matrix<Scalar> *array, size_t n) {
-    for (size_t i = 0; i < n; i++)
-        delete[] array[i].ptr();
-    delete[] array;
-}
+flann::Matrix<Scalar>* alloc_matrix_array(size_t n, size_t rows, size_t cols);
 
+template <typename Scalar>
+void free_matrix_array(flann::Matrix<Scalar> *array, size_t n);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Declarations of the main np_divs functions
@@ -316,6 +306,24 @@ void np_divs(
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementations of helpers
+
+template <typename Scalar>
+flann::Matrix<Scalar>* alloc_matrix_array(size_t n, size_t rows, size_t cols) {
+    typedef flann::Matrix<Scalar> Matrix;
+    size_t s = rows * cols;
+
+    Matrix* array = new Matrix[n];
+    for (size_t i = 0; i < n; i++)
+        array[i] = Matrix(new Scalar[s], rows, cols);
+    return array;
+}
+
+template <typename Scalar>
+void free_matrix_array(flann::Matrix<Scalar> *array, size_t n) {
+    for (size_t i = 0; i < n; i++)
+        delete[] array[i].ptr();
+    delete[] array;
+}
 
 template <typename T>
 void verify_allocated(
