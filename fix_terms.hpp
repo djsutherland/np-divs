@@ -3,14 +3,13 @@
 #include "basics.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <vector>
-
-#include <boost/math/special_functions/fpclassify.hpp>
 
 namespace NPDivs {
 
 template <typename T>
-bool cmp_with_inf(T i, T j) { return boost::math::isinf(i) || i < j; }
+bool cmp_with_inf(T i, T j) { return std::isinf(i) || i < j; }
 
 template <typename T>
 struct greater_than {
@@ -40,7 +39,7 @@ void fix_terms(std::vector<T> &terms, double ub = .99) {
     bool find_noninf_max = true;
 
     // throw away any nans
-    remove_if(terms.begin(), terms.end(), boost::math::isnan<T>);
+    remove_if(terms.begin(), terms.end(), std::isnan<T>);
 
     // try finding the ub-th percentile
     if (ub < 1) {
@@ -48,7 +47,7 @@ void fix_terms(std::vector<T> &terms, double ub = .99) {
         nth_element(terms.begin(), terms.begin() + k, terms.end());
         cutoff = terms[k];
 
-        find_noninf_max = boost::math::isinf(cutoff);
+        find_noninf_max = std::isinf(cutoff);
     }
 
     // just use the highest non-inf element
