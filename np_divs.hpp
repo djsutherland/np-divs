@@ -14,6 +14,7 @@
 #include <boost/format.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/thread.hpp>
+#include <boost/version.hpp>
 
 #include <flann/flann.hpp>
 
@@ -406,8 +407,9 @@ void np_divs(
      * Runs on num_threads threads; if num_threads is 0 (the default), uses one
      * thread per core/hyperthreading unit, as determined by
      * boost::thread::hardware_concurrency (or 1 if that information is
-     * unavailable). If num_threads is 1, doesn't actually spawn any new
-     * threads.
+     * unavailable). Note that if you use boost 1.34 or lower, this function is
+     * unavailable and so num_threads will always default to 1. If num_threads
+     * is 1, doesn't actually spawn any new threads.
      *
      * By default, conducts a quick check that the result matrices were
      * allocated properly; if you're sure that you did and want to skip this
@@ -586,8 +588,10 @@ void free_matrix_array(flann::Matrix<Scalar> *array, size_t n) {
 }
 
 size_t get_num_threads(size_t num_threads) {
+#if BOOST_VERSION >= 103500
     if (num_threads == 0)
         num_threads = boost::thread::hardware_concurrency();
+#endif
     return num_threads > 0 ? num_threads : 1;
 }
 
