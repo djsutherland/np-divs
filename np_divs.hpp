@@ -505,21 +505,19 @@ void np_divs(
 
 template <typename Distance>
 void divcalc_worker<Distance>::operator()() {
+    size_pair job;
     while (true) {
-        jobs_lock.lock();
+        { // lock applies only in this scope
+            boost::mutex::scoped_lock the_lock(jobs_lock);
 
-        if (jobs.size() == 0) {
-            jobs_lock.unlock();
-            break;
+            if (jobs.size() == 0)
+                return;
+
+            job = jobs.front();
+            jobs.pop();
         }
 
-        size_pair job = jobs.front();
-        jobs.pop();
-        size_t i = job.first, j = job.second;
-
-        jobs_lock.unlock();
-
-        this->do_job(i, j);
+        this->do_job(job.first, job.second);
     }
 }
 
