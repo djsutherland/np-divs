@@ -1,11 +1,11 @@
-#ifndef UTILS_HPP_
-#define UTILS_HPP_
+#ifndef FIX_TERMS_HPP_
+#define FIX_TERMS_HPP_
 #include "basics.hpp"
 
 #include <algorithm>
 #include <vector>
 
-#include <boost/math/special_functions.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 namespace NPDivs {
 
@@ -25,8 +25,9 @@ template <typename T>
 void fix_terms(std::vector<T> &terms, double ub = .99) {
     /* Takes a vector of elements and replaces any infinite or very-large
      * elements with the value of the highest non-very-large element, as well
-     * as possibly changing the order. "Very-large" is defined as the ub-th
-     * quantile if ub < 1, otherwise the largest non-inf element.
+     * as throwing away any nan values, possibly changing the order.
+     * "Very-large" is defined as the ub-th quantile if ub < 1, otherwise the
+     * largest non-inf element. Note that values of -inf are not altered.
      */
     typedef typename std::vector<T>::size_type sz;
 
