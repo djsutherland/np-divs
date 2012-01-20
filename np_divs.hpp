@@ -127,6 +127,52 @@ std::vector<std::vector<typename Distance::ResultType> > get_rhos(
         bool actually_do_it = true);
 // bool arg is a hack so it's easier to define refs that you might not need
 
+////////////////////////////////////////////////////////////////////////////////
+// Functor classes used to run the threads for the multithreaded versions
+
+template <typename Distance>
+class divcalc_worker_thread_samebags {
+    typedef flann::Matrix<typename Distance::ElementType> Matrix;
+    typedef flann::Index<Distance> Index;
+    typedef std::vector<typename Distance::ResultType> DistVec;
+    typedef std::vector<DistVec> DistVecVec;
+    typedef std::pair<size_t, size_t> size_pair;
+
+    const Matrix *bags;
+    Index **indices;
+    const std::vector<DistVec> &rhos;
+    int k; int dim;
+
+    const boost::ptr_vector<DivFunc> &div_funcs;
+    size_t num_dfs;
+
+    const flann::SearchParams &search_params;
+    Matrix *results;
+    boost::mutex &jobs_lock;
+    std::queue<size_pair> &jobs;
+
+    public:
+
+    divcalc_worker_thread_samebags(
+            const Matrix *bags,
+            Index **indices,
+            const DistVecVec &rhos,
+            const boost::ptr_vector<DivFunc> &div_funcs,
+            int k, int dim,
+            const flann::SearchParams &search_params,
+            Matrix *results,
+            boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
+        :
+            bags(bags), indices(indices), rhos(rhos),
+            k(k), dim(dim), div_funcs(div_funcs), num_dfs(div_funcs.size()),
+            search_params(search_params), results(results),
+            jobs_lock(jobs_lock), jobs(jobs)
+        { }
+
+    void do_job(size_t i, size_t j);
+    void operator()();
+};
+
 template <typename Distance>
 class divcalc_worker_thread {
     typedef flann::Matrix<typename Distance::ElementType> Matrix;
@@ -146,14 +192,15 @@ class divcalc_worker_thread {
     std::queue<size_pair> &jobs;
 
     public:
-    divcalc_worker_thread(const Matrix *x_bags, const Matrix *y_bags,
-                          Index **x_indices, Index **y_indices,
-                          const DistVecVec &x_rhos, const DistVecVec &y_rhos,
-                          const boost::ptr_vector<DivFunc> &div_funcs,
-                          int k, int dim,
-                          const flann::SearchParams &search_params,
-                          Matrix *results,
-                          boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
+    divcalc_worker_thread(
+            const Matrix *x_bags, const Matrix *y_bags,
+            Index **x_indices, Index **y_indices,
+            const DistVecVec &x_rhos, const DistVecVec &y_rhos,
+            const boost::ptr_vector<DivFunc> &div_funcs,
+            int k, int dim,
+            const flann::SearchParams &search_params,
+            Matrix *results,
+            boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
         :
             x_bags(x_bags), y_bags(y_bags),
             x_indices(x_indices), y_indices(y_indices),
@@ -218,45 +265,54 @@ void np_divs(
     const vector<DistVec> &rhos =
         get_rhos(bags, indices, num_bags, k, search_params);
 
+    // this queue will tell threads what to do
+    std::queue<std::pair<size_t, size_t> > jobs;
+
+    // to avoid simultaneous access to jobs. the only other non-const things
+    // are the indices (which are thread-safe for searching) and results, which
+    // is fine since the threads only touch separate parts of it.
+    boost::mutex jobs_lock; 
+
     // compute away!
-    for (size_t i = 0; i < num_bags; i++) {
-        const Matrix &x_bag = bags[i];
-        Index &x_index = *indices[i];
-        const DistVec &rho_x = rhos[i];
+    if (num_threads == 1) {
+        divcalc_worker_thread_samebags<Distance> worker(
+                bags, indices, rhos, div_funcs, k, dim, search_params,
+                results, jobs_lock, jobs
+        );
 
-        // calculate the nu from x_bag to itself
-        // TODO - is this actually what we want?
-        const DistVec &nu_xx = DKN(x_index, x_bag, k, search_params);
+        // ignore the queue, just use do_job directly
+        for (size_t i = 0; i < num_bags; i++)
+            for (size_t j = 0; j <= i; j++)
+                worker.do_job(i, j);
 
-        // compare with self
-        for (size_t df = 0; df < num_dfs; df++) {
-            results[df][i][i] = div_funcs[df](
-                    rho_x, nu_xx, rho_x, nu_xx, dim, k);
+    } else {
+        // put jobs in the queue
+        for (size_t i = 0; i < num_bags; i++)
+            for (size_t j = 0; j <= i; j++)
+                jobs.push(std::pair<size_t, size_t>(i, j));
+
+        // we keep the divcalc_worker_thread objects in this ptr_vector so
+        // that they don't get copied but also have the correct lifetime
+        boost::ptr_vector<divcalc_worker_thread_samebags<Distance> > workers;
+        boost::thread_group worker_threads;
+
+        for (size_t i = 0; i < num_threads; i++) {
+            // create the worker
+            // note that anything that isn't passed as a boost::ref here
+            // will be copied. it's okay to copy pointers, though...
+
+            workers.push_back(new divcalc_worker_thread_samebags<Distance>(
+                bags, indices, rhos, div_funcs, k, dim, search_params,
+                results, jobs_lock, jobs
+            ));
+            worker_threads.create_thread(boost::ref(workers[i]));
         }
-
-        // compare with others (both to and from)
-        for (size_t j = 0; j < i; j++) {
-            const Matrix &y_bag = bags[j];
-            Index &y_index = *indices[j];
-            const DistVec &rho_y = rhos[j];
-
-            const DistVec nu_x = DKN(
-                    y_index, x_bag, k, search_params);
-            const DistVec nu_y = DKN(
-                    x_index, y_bag, k, search_params);
-
-            for (size_t df = 0; df < num_dfs; df++) {
-                results[df][i][j] = div_funcs[df](
-                        rho_x, nu_x, rho_y, nu_y, dim, k);
-                results[df][j][i] = div_funcs[df](
-                        rho_y, nu_y, rho_x, nu_x, dim, k);
-            }
-        }
+        worker_threads.join_all();
     }
 
     free_indices(indices, num_bags);
-
 }
+
 
 template <typename Scalar>
 void np_divs(
@@ -274,7 +330,6 @@ void np_divs(
     return np_divs(x_bags, num_x, y_bags, num_y, div_funcs, results, k,
             index_params, search_params, num_threads, verify_results_alloced);
 }
-
 
 
 template <typename Scalar>
@@ -402,10 +457,59 @@ void np_divs(
 // Implementations of helpers
 
 template <typename Distance>
+void divcalc_worker_thread_samebags<Distance>::operator()() {
+    while (true) {
+        // get our next job
+        jobs_lock.lock();
+
+        if (jobs.size() == 0) {
+            jobs_lock.unlock();
+            break;
+        }
+
+        size_pair job = jobs.front();
+        jobs.pop();
+        size_t i = job.first, j = job.second;
+
+        jobs_lock.unlock();
+
+        this->do_job(i, j);
+    }
+}
+
+template <typename Distance>
+void divcalc_worker_thread_samebags<Distance>::do_job(size_t i, size_t j) {
+    if (i == j) {
+        const Matrix &bag = bags[i];
+        Index &index = *indices[i];
+        const DistVec &rho = rhos[i];
+
+        const DistVec &nu = DKN(index, bag, k, search_params);
+
+        for (size_t df = 0; df < num_dfs; df++) {
+            results[df][i][i] = div_funcs[df](rho, nu, rho, nu, dim, k);
+        }
+    } else {
+        const Matrix  &x_bag = bags[i],       &y_bag = bags[j];
+        Index         &x_index = *indices[i], &y_index = *indices[j]; 
+        const DistVec &rho_x = rhos[i],       &rho_y = rhos[j];
+
+        const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
+        const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
+
+        for (size_t df = 0; df < num_dfs; df++) {
+            const DivFunc &div_func = div_funcs[df];
+            results[df][i][j] = div_func(rho_x, nu_x, rho_y, nu_y, dim, k);
+            results[df][j][i] = div_func(rho_y, nu_y, rho_x, nu_x, dim, k);
+        }
+    }
+}
+
+template <typename Distance>
 void divcalc_worker_thread<Distance>::operator()() {
     size_t num_dfs = div_funcs.size();
 
-    while (1) {
+    while (true) {
         // get our next job
         jobs_lock.lock();
 
@@ -422,12 +526,9 @@ void divcalc_worker_thread<Distance>::operator()() {
 
 
         // load up references to things we'll need
-        const Matrix &x_bag = x_bags[i];
-        const Matrix &y_bag = y_bags[j];
-        Index &x_index = *x_indices[i];
-        Index &y_index = *y_indices[j];
-        const DistVec &rho_x = x_rhos[i];
-        const DistVec &rho_y = y_rhos[j];
+        const Matrix  &x_bag = x_bags[i],        &y_bag = y_bags[j];
+        Index         &x_index = *x_indices[i],  &y_index = *y_indices[j];
+        const DistVec &rho_x = x_rhos[i],        &rho_y = y_rhos[j];
 
         // compute away
         const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
