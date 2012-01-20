@@ -140,14 +140,36 @@ class NPDivGaussiansTest : public NPDivTest {
         delete[] expected;
     }
 
-    Matrix* one_to_two_expected() {
-        Matrix* real =
+    void test_gaussians_to_self(size_t num_threads) {
+        Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
+
+        np_divs(bags, num_bags, div_funcs, results, 3,
+                index_params, search_params, num_threads);
+
+        expect_near_matrix_array(results, expected, num_df);
+
+        free_matrix_array(results, num_df);
+    }
+
+    void test_gaussians_one_to_two(size_t num_threads) {
+        Matrix* results =
+            alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+
+        Matrix* _expected =
             alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
         for (size_t df = 0; df < num_df; df++)
             for (size_t i = 0; i < num_per_group; i++)
                 for (size_t j = 0; j < num_per_group; j++)
-                    real[df][i][j] = expected[df][i][num_per_group + j];
-        return real;
+                    _expected[df][i][j] = expected[df][i][num_per_group + j];
+
+        np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
+                div_funcs, results, 3,
+                index_params, search_params, num_threads);
+
+        expect_near_matrix_array(results, _expected, num_df);
+
+        free_matrix_array(results, num_df);
+        free_matrix_array(_expected, num_df);
     }
 
     const string fname;
@@ -161,82 +183,24 @@ class NPDivGaussiansTest : public NPDivTest {
     Matrix* expected;
 };
 
-
 TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfSingleThreaded) {
-    Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
-
-    np_divs(bags, num_bags, div_funcs, results, 3,
-            index_params, search_params, 1);
-
-    expect_near_matrix_array(results, expected, num_df);
-
-    free_matrix_array(results, num_df);
+    test_gaussians_to_self(1);
 }
-
 TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfTwoThreaded) {
-    Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
-
-    np_divs(bags, num_bags, div_funcs, results, 3,
-            index_params, search_params, 2);
-
-    expect_near_matrix_array(results, expected, num_df);
-
-    free_matrix_array(results, num_df);
+    test_gaussians_to_self(2);
 }
-
 TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfManyThreaded) {
-    Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
-
-    np_divs(bags, num_bags, div_funcs, results, 3,
-            index_params, search_params, 50);
-
-    expect_near_matrix_array(results, expected, num_df);
-
-    free_matrix_array(results, num_df);
+    test_gaussians_to_self(50);
 }
-
-
 
 TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoSingleThreaded) {
-    Matrix* results =
-        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
-    Matrix* real_expected = one_to_two_expected();
-
-    np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
-            div_funcs, results, 3, index_params, search_params, 1);
-
-    expect_near_matrix_array(results, real_expected, num_df);
-
-    free_matrix_array(results, num_df);
-    free_matrix_array(real_expected, num_df);
+    test_gaussians_one_to_two(1);
 }
-
 TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoTwoThreaded) {
-    Matrix* results =
-        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
-    Matrix* real_expected = one_to_two_expected();
-
-    np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
-            div_funcs, results, 3, index_params, search_params, 2);
-
-    expect_near_matrix_array(results, real_expected, num_df);
-
-    free_matrix_array(results, num_df);
-    free_matrix_array(real_expected, num_df);
+    test_gaussians_one_to_two(2);
 }
-
 TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoManyThreaded) {
-    Matrix* results =
-        alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
-    Matrix* real_expected = one_to_two_expected();
-
-    np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
-            div_funcs, results, 3, index_params, search_params, 50);
-
-    expect_near_matrix_array(results, real_expected, num_df);
-
-    free_matrix_array(results, num_df);
-    free_matrix_array(real_expected, num_df);
+    test_gaussians_one_to_two(50);
 }
 
 
