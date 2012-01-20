@@ -9,6 +9,7 @@
 #include "np_divs.hpp"
 
 #include <algorithm>
+#include <cassert>
 
 #include <boost/assign/std/vector.hpp>
 
@@ -116,14 +117,14 @@ class NPDivGaussiansTest : public NPDivTest {
         div_funcs.push_back(new DivRenyi(.999));
         div_funcs.push_back(new DivHellinger());
         div_funcs.push_back(new DivBC());
-        ASSERT_EQ(div_funcs.size(), num_df);
+        assert (div_funcs.size() == num_df); // can't do ASSERT_EQ in ctor on gcc
 
         // load expectations
         for (size_t i = 0; i < num_df; i++) {
             load_from_file(expected[i],
                     fname, "gaussian/divs/" + div_funcs[i].name());
-            ASSERT_EQ(expected[i].rows, num_bags);
-            ASSERT_EQ(expected[i].cols, num_bags);
+            assert (expected[i].rows == num_bags);
+            assert (expected[i].cols == num_bags);
         }
     }
 
