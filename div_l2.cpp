@@ -33,6 +33,11 @@ public:
     }
 };
 
+template <typename T>
+inline T mean(const vector<T> v) {
+    return accumulate(v.begin(), v.end(), (T) 0) / v.size();
+}
+
 double DivL2::operator()(const vector<float> &rho_x,
                          const vector<float> &nu_x,
                          const vector<float> &rho_y,
@@ -59,16 +64,14 @@ double DivL2::operator()(const vector<float> &rho_x,
     transform( nu_y.begin(),  nu_y.end(), pq.begin(), pow_mult(-dim, c/  N  ));
     transform(rho_y.begin(), rho_y.end(), qq.begin(), pow_mult(-dim, c/(M-1)));
 
-    // combine terms // FIXME: assumes N = M
-    for (size_t i = 0; i < N; i++) {
-        pp[i] += -qp[i] - pq[i] + qq[i];
-    }
-
     // throw away anything too big
-    fix_terms(pp, ub);
+    fix_terms(pp);
+    fix_terms(qp);
+    fix_terms(pq);
+    fix_terms(qq);
 
-    // take the mean and sqrt it
-    double res = accumulate(pp.begin(), pp.end(), 0.) / N;
+    // combine terms
+    double res = mean(pp) - mean(qp) - mean(pq) + mean(qq);
     return res > 0 ? sqrt(res) : 0.;
 }
 
