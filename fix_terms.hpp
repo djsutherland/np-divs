@@ -43,7 +43,7 @@ void fix_terms(std::vector<T> &terms, double ub = .99) {
 
     // try finding the ub-th percentile
     if (ub < 1) {
-        sz k = terms.size() * ub; // the index we want
+        sz k = (sz) (terms.size() * ub); // the index we want
         nth_element(terms.begin(), terms.begin() + k, terms.end());
         cutoff = terms[k];
 
