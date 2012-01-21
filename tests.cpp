@@ -146,7 +146,7 @@ class NPDivDataTest : public NPDivTest {
             delete[] expected[i].ptr();
     }
 
-    void test_to_self(size_t num_threads) {
+    void test_to_self(size_t num_threads = 0) {
         Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
 
         np_divs(bags, num_bags, div_funcs, results, 3,
@@ -157,7 +157,7 @@ class NPDivDataTest : public NPDivTest {
         free_matrix_array(results, num_df);
     }
 
-    void test_one_to_two(size_t num_threads) {
+    void test_one_to_two(size_t num_threads = 0) {
         Matrix* results =
             alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
 
@@ -216,9 +216,9 @@ protected:
     ~Gaussians50DTest() { free_bags(); }
 };
 
-TEST_F(Gaussians50DTest, ToSelf) { test_to_self(0); }
+TEST_F(Gaussians50DTest, ToSelf) { test_to_self(); }
 
-TEST_F(Gaussians50DTest, OneToTwo) { test_one_to_two(0); }
+TEST_F(Gaussians50DTest, OneToTwo) { test_one_to_two(); }
 
 
 } // end namespace
