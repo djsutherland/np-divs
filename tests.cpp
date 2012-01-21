@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <string>
 
 #include <boost/assign/std/vector.hpp>
 
@@ -29,15 +30,19 @@ using flann::L2;
 typedef flann::Matrix<float> Matrix;
 
 void expect_near_matrix_array(
-    const Matrix *results, const Matrix *expected, size_t num, float dist=.015)
+    const Matrix *results, const Matrix *expected, size_t num, float dist=.1)
 {
+    float error;
     for (size_t n = 0; n < num; n++) {
         const Matrix &m = results[n];
-        for (size_t i = 0; i < m.rows; i++)
-            for (size_t j = 0; j < m.cols; j++)
-                EXPECT_NEAR(results[n][i][j], expected[n][i][j], dist)
+        for (size_t i = 0; i < m.rows; i++) {
+            for (size_t j = 0; j < m.cols; j++) {
+                error = max(expected[n][i][j] * dist, (float) .01);
+                EXPECT_NEAR(results[n][i][j], expected[n][i][j], error)
                     << boost::format("Big difference for n=%d, i=%d, j=%d")
                        % n % i % j;
+            }
+        }
     }
 }
 
@@ -47,13 +52,13 @@ class NPDivTest : public ::testing::Test {
     protected:
 
     NPDivTest() : index_params(flann::KDTreeSingleIndexParams()),
-                  search_params(SearchParams())
+                  search_params(SearchParams(flann::FLANN_CHECKS_UNLIMITED))
     {}
 
     virtual ~NPDivTest() {}
 
-    const IndexParams index_params;
-    const SearchParams search_params;
+    IndexParams index_params;
+    SearchParams search_params;
 };
 
 TEST_F(NPDivTest, DKNTwoD) {
@@ -88,11 +93,11 @@ TEST_F(NPDivTest, DKNTwoD) {
 }
 
 
-class NPDivGaussiansTest : public NPDivTest {
+class NPDivDataTest : public NPDivTest {
     typedef NPDivTest super;
 
     protected:
-    NPDivGaussiansTest() :
+    NPDivDataTest() :
         fname("test_dists.hdf5"),
         num_groups(2),
         num_per_group(5),
@@ -102,22 +107,26 @@ class NPDivGaussiansTest : public NPDivTest {
         num_df(4),
         expected(new Matrix[num_df])
     {
-        // load bags
-        boost::format path("gaussian/%d/%d");
-        for (size_t group = 0; group < num_groups; group++) {
-            for (size_t i = 0; i < num_per_group; i++) {
-                load_from_file(
-                        bags[group*num_per_group + i],
-                        fname, (path % (group+1) % (i+1)).str());
-            }
-        }
-
         // specify divergence functions
         div_funcs.push_back(new DivL2());
         div_funcs.push_back(new DivRenyi(.999));
         div_funcs.push_back(new DivHellinger());
         div_funcs.push_back(new DivBC());
-        assert (div_funcs.size() == num_df); // can't do ASSERT_EQ in ctor on gcc
+        assert (div_funcs.size() == num_df);
+        // ^^ can't do ASSERT_EQ in constructor on old gcc
+    }
+
+    void load_bags(string groupname) {
+        boost::format f = boost::format("%s/%i/%i");
+
+        // load bags
+        for (size_t group = 0; group < num_groups; group++) {
+            for (size_t i = 0; i < num_per_group; i++) {
+                load_from_file(
+                        bags[group*num_per_group + i],
+                        fname, (f % groupname % (group+1) % (i+1)).str());
+            }
+        }
 
         // load expectations
         for (size_t i = 0; i < num_df; i++) {
@@ -128,19 +137,16 @@ class NPDivGaussiansTest : public NPDivTest {
         }
     }
 
-    virtual ~NPDivGaussiansTest() {
-        // free bags
+    void free_bags() {
+        // doesn't free the bags/expected array itself; deconstructor does that
         for (size_t i = 0; i < num_bags; i++)
             delete[] bags[i].ptr();
-        delete[] bags;
 
-        // free expected
         for (size_t i = 0; i < num_df; i++)
             delete[] expected[i].ptr();
-        delete[] expected;
     }
 
-    void test_gaussians_to_self(size_t num_threads) {
+    void test_to_self(size_t num_threads) {
         Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
 
         np_divs(bags, num_bags, div_funcs, results, 3,
@@ -151,7 +157,7 @@ class NPDivGaussiansTest : public NPDivTest {
         free_matrix_array(results, num_df);
     }
 
-    void test_gaussians_one_to_two(size_t num_threads) {
+    void test_one_to_two(size_t num_threads) {
         Matrix* results =
             alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
 
@@ -183,25 +189,36 @@ class NPDivGaussiansTest : public NPDivTest {
     Matrix* expected;
 };
 
-TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfSingleThreaded) {
-    test_gaussians_to_self(1);
-}
-TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfTwoThreaded) {
-    test_gaussians_to_self(2);
-}
-TEST_F(NPDivGaussiansTest, NPDivsGaussiansToSelfManyThreaded) {
-    test_gaussians_to_self(50);
-}
 
-TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoSingleThreaded) {
-    test_gaussians_one_to_two(1);
-}
-TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoTwoThreaded) {
-    test_gaussians_one_to_two(2);
-}
-TEST_F(NPDivGaussiansTest, NPDivGaussiansOneToTwoManyThreaded) {
-    test_gaussians_one_to_two(50);
-}
+class Gaussians2DTest : public NPDivDataTest {
+    typedef NPDivDataTest super;
+protected:
+    Gaussians2DTest() : super() { load_bags("gaussian"); }
+    ~Gaussians2DTest() { free_bags(); }
+};
+
+TEST_F(Gaussians2DTest, ToSelfOneThread)   { test_to_self(1); }
+TEST_F(Gaussians2DTest, ToSelfTwoThreads)  { test_to_self(2); }
+TEST_F(Gaussians2DTest, ToSelfManyThreads) { test_to_self(50); }
+
+TEST_F(Gaussians2DTest, OneToTwoOneThread)   { test_one_to_two(1); }
+TEST_F(Gaussians2DTest, OneToTwoTwoThreads)  { test_one_to_two(2); }
+TEST_F(Gaussians2DTest, OneToTwoManyThreads) { test_one_to_two(50); }
+
+
+class Gaussians50DTest : public NPDivDataTest {
+    typedef NPDivDataTest super;
+protected:
+    Gaussians50DTest() : super() {
+        index_params = flann::LinearIndexParams();
+        load_bags("gaussian-50");
+    }
+    ~Gaussians50DTest() { free_bags(); }
+};
+
+TEST_F(Gaussians50DTest, ToSelf) { test_to_self(0); }
+
+TEST_F(Gaussians50DTest, OneToTwo) { test_one_to_two(0); }
 
 
 } // end namespace

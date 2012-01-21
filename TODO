@@ -1,4 +1,11 @@
+- investigate the differences from matlab results
+    - fix_terms being a little different?
+    - are the rhos/nus the same?
+    - something else?
+
 - c / matlab / python bindings
+
+- switch to cmake, package up into a shared library
 
 - add a reasonable CLI
 
@@ -11,10 +18,4 @@
 - more tests
     - especially one that's not 2D
 
-- investigate the (smallish) differences from matlab results
-    - fix_terms being a little different?
-    - are the rhos/nus the same?
-
 - investigate valgrind's errors about uninitialized memory
-
-- switch to cmake
