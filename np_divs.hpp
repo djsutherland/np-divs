@@ -14,6 +14,7 @@
 #include <boost/format.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/thread.hpp>
+#include <boost/utility.hpp>
 #include <boost/version.hpp>
 
 #include <flann/flann.hpp>
@@ -124,14 +125,15 @@ std::vector<std::vector<typename Distance::ResultType> > get_rhos(
         flann::Index<Distance> **indices,
         size_t n,
         int k,
-        const flann::SearchParams &search_params = SEARCH_PARAMS);
+        const flann::SearchParams &search_params = SEARCH_PARAMS,
+        size_t num_threads=1);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functor classes used to do the computation work
 
 template <typename Distance>
-class divcalc_worker {
+class divcalc_worker : boost::noncopyable {
     protected:
 
     typedef flann::Matrix<typename Distance::ElementType> Matrix;
@@ -318,7 +320,7 @@ void np_divs(
     Index** indices = make_indices<Distance>(bags, num_bags, index_params);
 
     const vector<DistVec> &rhos =
-        get_rhos(bags, indices, num_bags, k, search_params);
+        get_rhos(bags, indices, num_bags, k, search_params, num_threads);
 
     // this queue will tell threads what to do
     std::queue<std::pair<size_t, size_t> > jobs;
@@ -444,9 +446,9 @@ void np_divs(
     Index** y_indices = make_indices<Distance>(y_bags, num_y, index_params);
 
     const vector<DistVec> &x_rhos =
-            get_rhos(x_bags, x_indices, num_x, k, search_params);
+            get_rhos(x_bags, x_indices, num_x, k, search_params, num_threads);
     const vector<DistVec> &y_rhos =
-            get_rhos(y_bags, y_indices, num_y, k, search_params);
+            get_rhos(y_bags, y_indices, num_y, k, search_params, num_threads);
 
     // compute the divergences!
     //
@@ -640,19 +642,102 @@ void free_indices(flann::Index<Distance>** indices, size_t n) {
 }
 
 
-// TODO - multithread get_rhos
+template <typename Distance>
+class rho_getter : boost::noncopyable {
+    typedef flann::Index<Distance> Index;
+    typedef typename Distance::ResultType Scalar;
+    typedef flann::Matrix<Scalar> Matrix;
+    typedef std::vector<typename Distance::ResultType> DistVec;
+
+    const Matrix * bags;
+    Index ** indices;
+    int k;
+    const flann::SearchParams &search_params;
+
+    std::vector<DistVec> &rhos;
+    boost::mutex &rhos_mutex;
+
+    std::queue<size_t> &jobs;
+    boost::mutex &jobs_mutex;
+
+    public:
+    rho_getter(const Matrix *bags, Index **indices, int k,
+            const flann::SearchParams &search_params,
+            std::vector<DistVec> &rhos, boost::mutex &rhos_mutex,
+            std::queue<size_t> &jobs, boost::mutex &jobs_mutex)
+        :
+            bags(bags), indices(indices), k(k), search_params(search_params),
+            rhos(rhos), rhos_mutex(rhos_mutex),
+            jobs(jobs), jobs_mutex(jobs_mutex)
+        { }
+
+    void operator()(){
+        size_t i;
+        while (true) {
+            // get a job
+            {
+                boost::mutex::scoped_lock the_lock(jobs_mutex);
+
+                if (jobs.size() == 0) return;
+
+                i = jobs.front();
+                jobs.pop();
+            }
+
+            // compute
+            const DistVec &rho = DKN(*indices[i], bags[i], k+1, search_params);
+
+            // write out results
+            {
+                boost::mutex::scoped_lock the_lock(rhos_mutex);
+                rhos[i] = rho;
+            }
+        }
+    };
+};
+
+
 template <typename Distance>
 std::vector<std::vector<typename Distance::ResultType> > get_rhos(
         const flann::Matrix<typename Distance::ElementType> *bags,
         flann::Index<Distance> **indices,
         size_t n,
         int k,
-        const flann::SearchParams &search_params)
+        const flann::SearchParams &search_params,
+        size_t num_threads)
 {
+    // TODO - if dimension is small enough, don't thread
+
     std::vector<std::vector<typename Distance::ResultType> > rhos;
-    rhos.reserve(n);
-    for (size_t i = 0; i < n; i++)
-        rhos.push_back(DKN(*indices[i], bags[i], k+1, search_params));
+
+    if (num_threads == 1) {
+        rhos.reserve(n);
+        for (size_t i = 0; i < n; i++)
+            rhos.push_back(DKN(*indices[i], bags[i], k+1, search_params));
+
+    } else {
+        rhos.resize(n);
+
+        boost::ptr_vector<rho_getter<Distance> > workers;
+        boost::thread_group worker_threads;
+        boost::mutex rhos_mutex, jobs_mutex;
+
+        std::queue<size_t> jobs;
+        for (size_t i = 0; i < n; i++)
+            jobs.push(i);
+
+        for (size_t i = 0; i < num_threads; i++) {
+            workers.push_back(new rho_getter<Distance>(
+                        bags, indices, k, boost::ref(search_params),
+                        boost::ref(rhos), boost::ref(rhos_mutex),
+                        boost::ref(jobs), boost::ref(jobs_mutex)
+            ));
+            worker_threads.create_thread(boost::ref(workers[i]));
+        }
+
+        worker_threads.join_all();
+    }
+
     return rhos;
 }
 
