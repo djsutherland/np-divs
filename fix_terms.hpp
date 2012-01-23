@@ -9,7 +9,11 @@
 namespace NPDivs {
 
 template <typename T>
-bool cmp_with_inf(T i, T j) { return std::isinf(i) || i < j; }
+bool cmp_with_inf(T i, T j) {
+    if (std::isinf(i)) return true;
+    else if (std::isinf(j)) return false;
+    else return i < j;
+}
 
 template <typename T>
 struct greater_than {
@@ -19,6 +23,64 @@ struct greater_than {
     private:
         T base;
 };
+
+template <typename T>
+T quantile(std::vector<T> &vec, double p) {
+    /* Finds the p-th quantile of vec, changing its order in doing so
+     * (unless it's already sorted). Assumes that vec contains no nan
+     * values.
+     *
+     * Like the MATLAB quantile() function, but for only a single p.
+     * Specifically:
+     *
+     * Quantiles are specified using cumulative probabilities from 0 to 1. For
+     * an n-element vector vec, quantile computes quantiles as follows:
+     *
+     * 1. The sorted values in vec are taken as the
+     *      (0.5/n), (1.5/n), ..., ([n–0.5]/n) quantiles.
+     *
+     * 2. Linear interpolation is used to compute quantiles for probabilities
+     *      between (0.5/n) and ([n–0.5]/n).
+     *
+     * 3. The minimum or maximum values in vec are assigned to quantiles for
+     *      probabilities outside that range.
+     */
+    typedef typename std::vector<T>::size_type sz;
+
+    sz n = vec.size();
+
+    if (p > (n-.5) / n) {
+        return *std::max_element(vec.begin(), vec.end());
+
+    } else if (p < .5 / n) {
+        return *std::min_element(vec.begin(), vec.end());
+
+    } else {
+        // find the bounds we're interpolating between
+        // that is, find i s.t. (i+.5) / n <= p < (i+1.5)/n
+        double t = n * p - .5;
+        sz i = (sz) std::floor(t);
+
+        // partial sort so that the ith element is in vec[i], with
+        // smaller indices below it and larger above
+        std::nth_element(vec.begin(), vec.begin() + i, vec.end());
+
+        if (i == t) {
+            // did we luck out and get an integer index?
+            return vec[i];
+
+        } else {
+            // do linear interpolation between this and next index
+            T smaller = vec[i];
+
+            // figure out what next index is
+            T larger = *std::min_element(vec.begin() + i + 1, vec.end());
+
+            // interpolate
+            return smaller + (larger - smaller) * (t - i);
+        }
+    }
+}
 
 template <typename T>
 void fix_terms(std::vector<T> &terms, double ub = .99) {
@@ -39,15 +101,13 @@ void fix_terms(std::vector<T> &terms, double ub = .99) {
     bool find_noninf_max = true;
 
     // throw away any nans
-    remove_if(terms.begin(), terms.end(), std::isnan<T>);
+    terms.erase(remove_if(terms.begin(), terms.end(), std::isnan<T>),
+                terms.end());
 
     // try finding the ub-th percentile
     if (ub < 1) {
-        sz k = (sz) (terms.size() * ub); // the index we want
-        nth_element(terms.begin(), terms.begin() + k, terms.end());
-        cutoff = terms[k];
-
-        find_noninf_max = std::isinf(cutoff);
+        cutoff = quantile(terms, ub);
+        find_noninf_max = std::isinf(cutoff) || std::isnan(cutoff);
     }
 
     // just use the highest non-inf element
