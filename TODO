@@ -7,15 +7,16 @@
 
 - switch to cmake, package up into a shared library
 
-- add a reasonable CLI
+- add a CLI?
 
 - figure out some clever way to avoid repeated work in div funcs?
     - ie to do both BC and Hellinger without recomputing the common alpha part
     - possibly not worth the effort...
 
 - don't compute both directions unless a div func needs both
+    - add a typedef to div funcs noting this?
 
 - more tests
-    - especially one that's not 2D
-
-- investigate valgrind's errors about uninitialized memory
+    - one where bag sizes are different
+        - but the matlab estimator is wrong here:
+          L2 crashes, alpha-based have wrong constant
