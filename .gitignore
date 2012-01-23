@@ -1,6 +1,4 @@
 *.o
 *.gch
 *.dSYM
-np_divs
-tests
 /build
