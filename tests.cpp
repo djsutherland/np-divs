@@ -35,14 +35,14 @@ using flann::L2;
 typedef flann::Matrix<float> Matrix;
 
 void expect_near_matrix_array(
-    const Matrix *results, const Matrix *expected, size_t num, float dist=.1)
+    const Matrix *results, const Matrix *expected, size_t num, float dist=.001)
 {
     float error;
     for (size_t n = 0; n < num; n++) {
         const Matrix &m = results[n];
         for (size_t i = 0; i < m.rows; i++) {
             for (size_t j = 0; j < m.cols; j++) {
-                error = max(expected[n][i][j] * dist, (float) .01);
+                error = max(expected[n][i][j] * dist, (float) 1e-5);
                 EXPECT_NEAR(results[n][i][j], expected[n][i][j], error)
                     << boost::format("Big difference for n=%d, i=%d, j=%d")
                        % n % i % j;
@@ -316,7 +316,7 @@ class NPDivDataTest : public NPDivTest {
         // load expectations
         for (size_t i = 0; i < num_df; i++) {
             load_from_file(expected[i],
-                    fname, "gaussian/divs/" + div_funcs[i].name());
+                    fname, groupname + "/divs/" + div_funcs[i].name());
             assert (expected[i].rows == num_bags);
             assert (expected[i].cols == num_bags);
         }
