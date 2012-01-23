@@ -16,12 +16,7 @@ namespace NPDivs {
 
 using namespace std;
 
-DivAlpha::DivAlpha(double alpha_, double ub_) : DivFunc(ub_) {
-    if (alpha_ == 1.0) {
-        throw std::domain_error("alpha of 1.0 is not useful");
-    }
-    alpha = alpha_;
-}
+DivAlpha::DivAlpha(double alpha_, double ub_) : DivFunc(ub_), alpha(alpha_) {}
 
 string DivAlpha::name() const {
     return (boost::format("Alpha %g divergence") % alpha).str();
@@ -55,7 +50,7 @@ double DivAlpha::operator()(const vector<float> &rho,
      * m is the number of sample points in the Y distribution (the one
      * that nu is computed relative to).
      */
-    using namespace boost;
+    using boost::bind;
 
     size_t n = rho.size();
 
