@@ -1,11 +1,11 @@
 #ifndef DIV_HELLINGER_HPP
 #define DIV_HELLINGER_HPP
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <string>
 #include <vector>
 
-#include "div_alpha.hpp"
+#include "np-divs/div-funcs/div_alpha.hpp"
 
 namespace NPDivs {
 

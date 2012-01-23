@@ -1,12 +1,12 @@
 #ifndef DIV_ALPHA_HPP_
 #define DIV_ALPHA_HPP_
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <boost/format.hpp>
 #include <string>
 #include <vector>
 
-#include "div_func.hpp"
+#include "np-divs/div-funcs/div_func.hpp"
 
 namespace NPDivs {
 

@@ -1,6 +1,6 @@
 #ifndef DKN_HPP_
 #define DKN_HPP_
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <cmath>
 #include <vector>

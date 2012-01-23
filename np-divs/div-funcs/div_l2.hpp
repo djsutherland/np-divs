@@ -1,11 +1,11 @@
 #ifndef DIV_L2_HPP_
 #define DIV_L2_HPP_
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <string>
 #include <vector>
 
-#include "div_func.hpp"
+#include "np-divs/div-funcs/div_func.hpp"
 
 namespace NPDivs {
 

@@ -1,6 +1,6 @@
 #ifndef NP_DIVS_HPP_
 #define NP_DIVS_HPP_
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -19,9 +19,9 @@
 
 #include <flann/flann.hpp>
 
-#include "div_func.hpp"
-#include "div_l2.hpp"
-#include "dkn.hpp"
+#include "np-divs/div-funcs/div_func.hpp"
+#include "np-divs/div-funcs/div_l2.hpp"
+#include "np-divs/dkn.hpp"
 
 namespace NPDivs {
 

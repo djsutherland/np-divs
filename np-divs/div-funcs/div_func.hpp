@@ -1,6 +1,6 @@
 #ifndef DIV_FUNC_HPP_
 #define DIV_FUNC_HPP_
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <boost/utility.hpp>
 #include <string>

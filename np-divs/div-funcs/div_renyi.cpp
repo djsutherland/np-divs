@@ -1,4 +1,4 @@
-#include "div_renyi.hpp"
+#include "np-divs/div-funcs/div_renyi.hpp"
 
 #include <boost/format.hpp>
 #include <cmath>

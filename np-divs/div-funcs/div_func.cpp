@@ -1,4 +1,4 @@
-#include "div_func.hpp"
+#include "np-divs/div-funcs/div_func.hpp"
 
 namespace NPDivs {
 

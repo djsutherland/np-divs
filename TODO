@@ -1,6 +1,7 @@
 - c / matlab / python bindings
 
-- switch to cmake, package up into a shared library
+- include GTest as a submodule or something?
+    https://groups.google.com/forum/#!topic/googletestframework/Zo7_HOv1MJ0
 
 - add a CLI?
 

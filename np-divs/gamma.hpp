@@ -1,6 +1,6 @@
 #ifndef GAMMA_HPP_
 #define GAMMA_HPP_
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 namespace NPDivs {
 

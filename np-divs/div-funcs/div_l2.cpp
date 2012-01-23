@@ -1,4 +1,4 @@
-#include "div_l2.hpp"
+#include "np-divs/div-funcs/div_l2.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "fix_terms.hpp"
-#include "gamma.hpp"
+#include "np-divs/fix_terms.hpp"
+#include "np-divs/gamma.hpp"
 
 namespace NPDivs {
 
@@ -75,7 +75,7 @@ double DivL2::operator()(const vector<float> &rho_x,
     } else {
         // this is slightly faster, and more consistent with the matlab code
         // TODO - this special case should probably go away eventually
-        for (size_t i = 0; i < N; i++) {
+        for (int i = 0; i < N; i++) {
             pp[i] += qq[i] - pq[i] - qp[i];
         }
 

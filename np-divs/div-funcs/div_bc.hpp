@@ -1,10 +1,10 @@
 #ifndef DIV_BC_HPP
 #define DIV_BC_HPP
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <string>
 
-#include "div_alpha.hpp"
+#include "np-divs/div-funcs/div_alpha.hpp"
 
 namespace NPDivs {
 

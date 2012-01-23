@@ -1,15 +1,15 @@
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 #include <gtest/gtest.h>
 
-#include "div_func.hpp"
-#include "div_l2.hpp"
-#include "div_bc.hpp"
-#include "div_renyi.hpp"
-#include "div_hellinger.hpp"
-#include "dkn.hpp"
-#include "fix_terms.hpp"
-#include "gamma.hpp"
-#include "np_divs.hpp"
+#include "np-divs/div-funcs/div_func.hpp"
+#include "np-divs/div-funcs/div_l2.hpp"
+#include "np-divs/div-funcs/div_bc.hpp"
+#include "np-divs/div-funcs/div_renyi.hpp"
+#include "np-divs/div-funcs/div_hellinger.hpp"
+#include "np-divs/dkn.hpp"
+#include "np-divs/fix_terms.hpp"
+#include "np-divs/gamma.hpp"
+#include "np-divs/np_divs.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -401,9 +401,9 @@ protected:
     ~Gaussians50DTest() { free_bags(); }
 };
 
-TEST_F(Gaussians50DTest, ToSelf) { test_to_self(); }
+TEST_F(Gaussians50DTest, DISABLED_ToSelf) { test_to_self(); }
 
-TEST_F(Gaussians50DTest, OneToTwo) { test_one_to_two(); }
+TEST_F(Gaussians50DTest, DISABLED_OneToTwo) { test_one_to_two(); }
 
 
 } // end namespace

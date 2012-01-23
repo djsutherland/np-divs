@@ -1,6 +1,6 @@
 #ifndef FIX_TERMS_HPP_
 #define FIX_TERMS_HPP_
-#include "basics.hpp"
+#include "np-divs/basics.hpp"
 
 #include <algorithm>
 #include <cmath>

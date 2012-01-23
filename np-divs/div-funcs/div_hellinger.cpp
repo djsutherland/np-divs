@@ -1,4 +1,4 @@
-#include "div_hellinger.hpp"
+#include "np-divs/div-funcs/div_hellinger.hpp"
 
 #include <cmath>
 #include <string>

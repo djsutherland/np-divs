@@ -1,5 +1,5 @@
-This is a C++ implementation of Support Distribution Machines, implementing
-the nonparametric divergence estimators described in:
+This is a C++ implementation of the nonparametric divergence estimators
+described in:
 
     Barnabas Poczos, Liang Xiong, and Jeff Schneider.
     Nonparametric divergence estimation with applications to machine learning
@@ -9,6 +9,7 @@ the nonparametric divergence estimators described in:
 Requirements:
   * FLANN (people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN)
   * Boost (boost.org) - tested back to 1.33.1 but 1.35 or newer preferred
+  * CMake (cmake.org)
 
 Optional dependencies:
   * HDF5 (http://www.hdfgroup.org/HDF5/)
@@ -16,3 +17,24 @@ Optional dependencies:
 Testing requirements:
   * HDF5
   * Google Test (code.google.com/p/googletest/)
+
+
+To build:
+    mkdir build
+    cd build
+    cmake ..
+    make
+    make install
+
+To run tests before installing (recommended, but has more dependencies), use
+    cmake -DBUILD_TESTING=ON .. # pass GTEST_ROOT=/path/to/gtest if necessary
+    make
+    make test ARGS=-V
+
+Note that the computationally expensive Gaussians50DTest case is disabled by
+default, as it is unlikely to reveal any errors with your installation not shown
+by the Gaussians2DTest. If you would like to run it anyway, do
+    make test ARGS=-v GTEST_ALSO_RUN_DISABLED_TESTS=1
+
+To install to somewhere other than /usr/local, add e.g.
+    -DCMAKE_INSTALL_PREFIX=$HOME to the cmake command

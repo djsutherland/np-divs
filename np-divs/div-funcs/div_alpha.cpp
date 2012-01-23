@@ -1,4 +1,4 @@
-#include "div_alpha.hpp"
+#include "np-divs/div-funcs/div_alpha.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -9,8 +9,8 @@
 
 #include <boost/bind.hpp>
 
-#include "fix_terms.hpp"
-#include "gamma.hpp"
+#include "np-divs/fix_terms.hpp"
+#include "np-divs/gamma.hpp"
 
 namespace NPDivs {
 

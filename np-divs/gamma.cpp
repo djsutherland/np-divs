@@ -1,4 +1,4 @@
-#include "gamma.hpp"
+#include "np-divs/gamma.hpp"
 
 // based on code from http://www.crbond.com/math.htm:
 //
