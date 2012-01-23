@@ -1,7 +1,6 @@
 #include "div_l2.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <string>
@@ -9,8 +8,6 @@
 
 #include "fix_terms.hpp"
 #include "gamma.hpp"
-
-#include <iostream>
 
 namespace NPDivs {
 
@@ -34,9 +31,10 @@ public:
 };
 
 template <typename T>
-inline T mean(const vector<T> v) {
+inline T mean(const vector<T> &v) {
     return accumulate(v.begin(), v.end(), (T) 0) / v.size();
 }
+
 
 double DivL2::operator()(const vector<float> &rho_x,
                          const vector<float> &nu_x,
@@ -51,7 +49,6 @@ double DivL2::operator()(const vector<float> &rho_x,
 
     int N = rho_x.size();
     int M = rho_y.size();
-    assert (N == M); // Shouldn't be necessary, but code below assumes this
 
     // break up the calculation according to
     // \sqrt \int (p - q)^2 = \sqrt( \int p^2 - \int qp - \int pq + \int q^2 )
@@ -64,14 +61,27 @@ double DivL2::operator()(const vector<float> &rho_x,
     transform( nu_y.begin(),  nu_y.end(), pq.begin(), pow_mult(-dim, c/  N  ));
     transform(rho_y.begin(), rho_y.end(), qq.begin(), pow_mult(-dim, c/(M-1)));
 
-    // throw away anything too big
-    fix_terms(pp);
-    fix_terms(qp);
-    fix_terms(pq);
-    fix_terms(qq);
+    double res;
+    if (N != M) {
+        // throw away anything too big
+        fix_terms(pp);
+        fix_terms(qp);
+        fix_terms(pq);
+        fix_terms(qq);
 
-    // combine terms
-    double res = mean(pp) - mean(qp) - mean(pq) + mean(qq);
+        // combine terms
+        res = mean(pp) - mean(qp) - mean(pq) + mean(qq);
+
+    } else {
+        // this is slightly faster, and more consistent with the matlab code
+        // TODO - this special case should probably go away eventually
+        for (size_t i = 0; i < N; i++) {
+            pp[i] += qq[i] - pq[i] - qp[i];
+        }
+
+        fix_terms(pp);
+        res = mean(pp);
+    };
     return res > 0 ? sqrt(res) : 0.;
 }
 
