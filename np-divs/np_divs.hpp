@@ -147,7 +147,7 @@ class divcalc_worker : boost::noncopyable {
     const flann::SearchParams &search_params;
 
     flann::Matrix<double> *results;
-    boost::mutex &jobs_lock;
+    boost::mutex &jobs_mutex;
     std::queue<size_pair> &jobs;
 
     public:
@@ -158,12 +158,12 @@ class divcalc_worker : boost::noncopyable {
             const boost::ptr_vector<DivFunc> &div_funcs,
             const flann::SearchParams &search_params,
             flann::Matrix<double> *results,
-            boost::mutex &jobs_lock,
+            boost::mutex &jobs_mutex,
             std::queue<size_pair> &jobs)
         :
             k(k), dim(dim), div_funcs(div_funcs), num_dfs(div_funcs.size()),
             search_params(search_params), results(results),
-            jobs_lock(jobs_lock), jobs(jobs)
+            jobs_mutex(jobs_mutex), jobs(jobs)
         { }
 
     virtual ~divcalc_worker() {};
@@ -193,7 +193,7 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
     using super::num_dfs;
     using super::search_params;
     using super::results;
-    using super::jobs_lock;
+    using super::jobs_mutex;
     using super::jobs;
 
     const Matrix *bags;
@@ -210,9 +210,9 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
             int k, int dim,
             const flann::SearchParams &search_params,
             flann::Matrix<double> *results,
-            boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
+            boost::mutex &jobs_mutex, std::queue<size_pair> &jobs)
         :
-            super(k, dim, div_funcs, search_params, results, jobs_lock, jobs),
+            super(k, dim, div_funcs, search_params, results, jobs_mutex, jobs),
             bags(bags), indices(indices), rhos(rhos)
         { }
 
@@ -237,7 +237,7 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
     using super::num_dfs;
     using super::search_params;
     using super::results;
-    using super::jobs_lock;
+    using super::jobs_mutex;
     using super::jobs;
 
     const Matrix *x_bags, *y_bags;
@@ -253,9 +253,9 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
             int k, int dim,
             const flann::SearchParams &search_params,
             flann::Matrix<double> *results,
-            boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
+            boost::mutex &jobs_mutex, std::queue<size_pair> &jobs)
         :
-            super(k, dim, div_funcs, search_params, results, jobs_lock, jobs),
+            super(k, dim, div_funcs, search_params, results, jobs_mutex, jobs),
             x_bags(x_bags), y_bags(y_bags),
             x_indices(x_indices), y_indices(y_indices),
             x_rhos(x_rhos), y_rhos(y_rhos)
@@ -324,13 +324,13 @@ void np_divs(
     // to avoid simultaneous access to jobs. the only other non-const things
     // are the indices (which are thread-safe for searching) and results, which
     // is fine since the threads only touch separate parts of it.
-    boost::mutex jobs_lock;
+    boost::mutex jobs_mutex;
 
     // compute away!
     if (num_threads == 1) {
         divcalc_samebags_worker<Distance> worker(
                 bags, indices, rhos, div_funcs, k, dim, search_params,
-                results, jobs_lock, jobs
+                results, jobs_mutex, jobs
         );
 
         // ignore the queue, just use do_job directly
@@ -356,7 +356,7 @@ void np_divs(
 
             workers.push_back(new divcalc_samebags_worker<Distance>(
                 bags, indices, rhos, div_funcs, k, dim, search_params,
-                results, jobs_lock, jobs
+                results, jobs_mutex, jobs
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
@@ -456,12 +456,12 @@ void np_divs(
     // to avoid simultaneous access to jobs. the only other non-const things
     // are the indices (which are thread-safe for searching) and results, which
     // is fine since the threads only touch separate parts of it.
-    boost::mutex jobs_lock;
+    boost::mutex jobs_mutex;
 
     if (num_threads <= 1) {
         divcalc_diffbags_worker<Distance> worker(
             x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-            div_funcs, k, dim, search_params, results, jobs_lock, jobs
+            div_funcs, k, dim, search_params, results, jobs_mutex, jobs
         );
 
         // forget the queue and lock, just do_job directly
@@ -488,7 +488,7 @@ void np_divs(
 
             workers.push_back(new divcalc_diffbags_worker<Distance>(
                 x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-                div_funcs, k, dim, search_params, results, jobs_lock, jobs
+                div_funcs, k, dim, search_params, results, jobs_mutex, jobs
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
@@ -508,7 +508,7 @@ void divcalc_worker<Distance>::operator()() {
     size_pair job;
     while (true) {
         { // lock applies only in this scope
-            boost::mutex::scoped_lock the_lock(jobs_lock);
+            boost::mutex::scoped_lock the_lock(jobs_mutex);
 
             if (jobs.size() == 0)
                 return;
