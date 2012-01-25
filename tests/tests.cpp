@@ -32,17 +32,19 @@ using flann::IndexParams;
 using flann::SearchParams;
 using flann::L2;
 
-typedef flann::Matrix<float> Matrix;
+typedef flann::Matrix<float> MatrixF;
+typedef flann::Matrix<double> MatrixD;
 
 void expect_near_matrix_array(
-    const Matrix *results, const Matrix *expected, size_t num, float dist=.001)
+    const MatrixD *results, const MatrixD *expected,
+    size_t num, float dist=.001)
 {
     float error;
     for (size_t n = 0; n < num; n++) {
-        const Matrix &m = results[n];
+        const MatrixD &m = results[n];
         for (size_t i = 0; i < m.rows; i++) {
             for (size_t j = 0; j < m.cols; j++) {
-                error = max(expected[n][i][j] * dist, (float) 1e-5);
+                error = max(expected[n][i][j] * dist, 1e-5);
                 EXPECT_NEAR(results[n][i][j], expected[n][i][j], error)
                     << boost::format("Big difference for n=%d, i=%d, j=%d")
                        % n % i % j;
@@ -257,13 +259,13 @@ TEST_F(NPDivTest, DKNTwoD) {
                   -7.356, -9.513,
                   -2.687,  2.312,
                   -9.168, -2.966 };
-    Matrix dataset(d, 10, 2);
+    MatrixF dataset(d, 10, 2);
 
     float q[] = { -2.920, -9.522,
                    2.363,  6.885,
                    0.963,  4.673,
                    6.671,  0.481 };
-    Matrix query(q, 4, 2);
+    MatrixF query(q, 4, 2);
 
     vector<float> expected;
     expected += 3.8511, 7.3594, 5.2820, 4.6111;
@@ -287,10 +289,10 @@ class NPDivDataTest : public NPDivTest {
         num_groups(2),
         num_per_group(5),
         num_bags(num_groups * num_per_group),
-        bags(new Matrix[num_bags]),
+        bags(new MatrixF[num_bags]),
 
         num_df(4),
-        expected(new Matrix[num_df])
+        expected(new MatrixD[num_df])
     {
         // specify divergence functions
         div_funcs.push_back(new DivL2());
@@ -332,7 +334,8 @@ class NPDivDataTest : public NPDivTest {
     }
 
     void test_to_self(size_t num_threads = 0) {
-        Matrix* results = alloc_matrix_array<float>(num_df, num_bags, num_bags);
+        MatrixD* results =
+            alloc_matrix_array<double>(num_df, num_bags, num_bags);
 
         np_divs(bags, num_bags, div_funcs, results, 3,
                 index_params, search_params, num_threads);
@@ -343,11 +346,11 @@ class NPDivDataTest : public NPDivTest {
     }
 
     void test_one_to_two(size_t num_threads = 0) {
-        Matrix* results =
-            alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+        MatrixD* results =
+            alloc_matrix_array<double>(num_df, num_per_group, num_per_group);
 
-        Matrix* _expected =
-            alloc_matrix_array<float>(num_df, num_per_group, num_per_group);
+        MatrixD* _expected =
+            alloc_matrix_array<double>(num_df, num_per_group, num_per_group);
         for (size_t df = 0; df < num_df; df++)
             for (size_t i = 0; i < num_per_group; i++)
                 for (size_t j = 0; j < num_per_group; j++)
@@ -367,11 +370,11 @@ class NPDivDataTest : public NPDivTest {
     const size_t num_groups;
     const size_t num_per_group;
     const size_t num_bags;
-    Matrix* bags;
+    MatrixF* bags;
 
     boost::ptr_vector<DivFunc> div_funcs;
     const size_t num_df;
-    Matrix* expected;
+    MatrixD* expected;
 };
 
 

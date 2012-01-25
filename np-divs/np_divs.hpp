@@ -50,9 +50,8 @@ void free_matrix_array(flann::Matrix<Scalar> *array, size_t n);
 
 template <typename Scalar>
 void np_divs(
-    const flann::Matrix<Scalar> *bags,
-    size_t num_bags,
-    flann::Matrix<float> *results,
+    const flann::Matrix<Scalar> *bags, size_t num_bags,
+    flann::Matrix<double> *results,
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
@@ -61,10 +60,9 @@ void np_divs(
 
 template <typename Scalar>
 void np_divs(
-    const flann::Matrix<Scalar> *bags,
-    size_t num_bags,
+    const flann::Matrix<Scalar> *bags, size_t num_bags,
     const boost::ptr_vector<DivFunc> &div_funcs,
-    flann::Matrix<float> *results,
+    flann::Matrix<double> *results,
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
@@ -73,11 +71,9 @@ void np_divs(
 
 template <typename Scalar>
 void np_divs(
-    const flann::Matrix<Scalar> *x_bags,
-    size_t num_x,
-    const flann::Matrix<Scalar> *y_bags,
-    size_t num_y,
-    flann::Matrix<float>* results,
+    const flann::Matrix<Scalar> *x_bags, size_t num_x,
+    const flann::Matrix<Scalar> *y_bags, size_t num_y,
+    flann::Matrix<double>* results,
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
@@ -89,7 +85,7 @@ void np_divs(
     const flann::Matrix<Scalar> *x_bags, size_t num_x,
     const flann::Matrix<Scalar> *y_bags, size_t num_y,
     const boost::ptr_vector<DivFunc> &div_funcs,
-    flann::Matrix<float>* results,
+    flann::Matrix<double>* results,
     int k = 3,
     const flann::IndexParams &index_params = INDEX_PARAMS,
     const flann::SearchParams &search_params = SEARCH_PARAMS,
@@ -150,7 +146,7 @@ class divcalc_worker : boost::noncopyable {
 
     const flann::SearchParams &search_params;
 
-    Matrix *results;
+    flann::Matrix<double> *results;
     boost::mutex &jobs_lock;
     std::queue<size_pair> &jobs;
 
@@ -161,7 +157,7 @@ class divcalc_worker : boost::noncopyable {
             int dim,
             const boost::ptr_vector<DivFunc> &div_funcs,
             const flann::SearchParams &search_params,
-            Matrix *results,
+            flann::Matrix<double> *results,
             boost::mutex &jobs_lock,
             std::queue<size_pair> &jobs)
         :
@@ -213,7 +209,7 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
             const boost::ptr_vector<DivFunc> &div_funcs,
             int k, int dim,
             const flann::SearchParams &search_params,
-            Matrix *results,
+            flann::Matrix<double> *results,
             boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
         :
             super(k, dim, div_funcs, search_params, results, jobs_lock, jobs),
@@ -256,7 +252,7 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
             const boost::ptr_vector<DivFunc> &div_funcs,
             int k, int dim,
             const flann::SearchParams &search_params,
-            Matrix *results,
+            flann::Matrix<double> *results,
             boost::mutex &jobs_lock, std::queue<size_pair> &jobs)
         :
             super(k, dim, div_funcs, search_params, results, jobs_lock, jobs),
@@ -275,7 +271,7 @@ template <typename Scalar>
 void np_divs(
         const flann::Matrix<Scalar> *bags,
         size_t num_bags,
-        flann::Matrix<float>* results,
+        flann::Matrix<double>* results,
         int k,
         const flann::IndexParams &index_params,
         const flann::SearchParams &search_params,
@@ -293,7 +289,7 @@ void np_divs(
         const flann::Matrix<Scalar> *bags,
         size_t num_bags,
         const boost::ptr_vector<DivFunc> &div_funcs,
-        flann::Matrix<float>* results,
+        flann::Matrix<double>* results,
         int k,
         const flann::IndexParams &index_params,
         const flann::SearchParams &search_params,
@@ -375,7 +371,7 @@ template <typename Scalar>
 void np_divs(
         const flann::Matrix<Scalar> *x_bags, size_t num_x,
         const flann::Matrix<Scalar> *y_bags, size_t num_y,
-        flann::Matrix<float>* results,
+        flann::Matrix<double>* results,
         int k,
         const flann::IndexParams &index_params,
         const flann::SearchParams &search_params,
@@ -394,7 +390,7 @@ void np_divs(
     const flann::Matrix<Scalar>* x_bags, size_t num_x,
     const flann::Matrix<Scalar>* y_bags, size_t num_y,
     const boost::ptr_vector<DivFunc> &div_funcs,
-    flann::Matrix<float>* results,
+    flann::Matrix<double>* results,
     int k,
     const flann::IndexParams &index_params,
     const flann::SearchParams &search_params,
