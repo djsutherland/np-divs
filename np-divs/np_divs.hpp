@@ -351,9 +351,6 @@ void np_divs(
 
         for (size_t i = 0; i < num_threads; i++) {
             // create the worker
-            // note that anything that isn't passed as a boost::ref here
-            // will be copied. it's okay to copy pointers, though...
-
             workers.push_back(new divcalc_samebags_worker<Distance>(
                 bags, indices, rhos, div_funcs, k, dim, search_params,
                 results, jobs_mutex, jobs
@@ -483,9 +480,6 @@ void np_divs(
 
         for (size_t i = 0; i < num_threads; i++) {
             // create the worker
-            // note that anything that isn't passed as a boost::ref here
-            // will be copied. it's okay to copy pointers, though...
-
             workers.push_back(new divcalc_diffbags_worker<Distance>(
                 x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
                 div_funcs, k, dim, search_params, results, jobs_mutex, jobs
@@ -724,9 +718,8 @@ std::vector<std::vector<typename Distance::ResultType> > get_rhos(
 
         for (size_t i = 0; i < num_threads; i++) {
             workers.push_back(new rho_getter<Distance>(
-                        bags, indices, k, boost::ref(search_params),
-                        boost::ref(rhos), boost::ref(rhos_mutex),
-                        boost::ref(jobs), boost::ref(jobs_mutex)
+                        bags, indices, k, search_params,
+                        rhos, rhos_mutex, jobs, jobs_mutex
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
