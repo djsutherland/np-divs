@@ -2,12 +2,10 @@
 
 namespace NPDivs {
 
-DivFunc::DivFunc(double ub_) {
-    ub = ub_;
-}
+DivFunc::DivFunc(double ub_) : ub(ub_) { }
 
-DivFunc* DivFunc::clone() const {
-    return do_clone();
-}
+double DivFunc::get_ub() const { return ub; }
+
+DivFunc* DivFunc::clone() const { return do_clone(); }
 
 }

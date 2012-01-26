@@ -10,7 +10,7 @@ namespace NPDivs {
 
 class DivFunc : boost::noncopyable {
     protected:
-        double ub; // if ub is .99, will cap terms at the 99-th percentile
+        const double ub; // if ub is .99, will cap terms at the 99-th percentile
 
     public:
         DivFunc(double ub = .99);
@@ -29,6 +29,8 @@ class DivFunc : boost::noncopyable {
             ) const = 0;
 
         DivFunc* clone() const;
+
+        double get_ub() const;
 
     private:
         virtual DivFunc* do_clone() const = 0;

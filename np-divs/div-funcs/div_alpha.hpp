@@ -14,7 +14,7 @@ class DivAlpha : public DivFunc {
     typedef DivFunc super;
 
     protected:
-        double alpha;
+        const double alpha;
 
     public:
         DivAlpha(double alpha=.999, double ub = .99);
@@ -37,6 +37,8 @@ class DivAlpha : public DivFunc {
                 int dim,
                 int k
             ) const;
+
+        double get_alpha() const;
 
     private:
         virtual DivAlpha* do_clone() const;

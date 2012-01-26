@@ -73,6 +73,8 @@ double DivAlpha::operator()(const vector<float> &rho,
            pow((n-1.0) / m, 1.-alpha);
 }
 
+double DivAlpha::get_alpha() const { return alpha; }
+
 DivAlpha* DivAlpha::do_clone() const {
     return new DivAlpha(alpha, ub);
 }
