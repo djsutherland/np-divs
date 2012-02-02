@@ -22,17 +22,9 @@
 #include "np-divs/div-funcs/div_func.hpp"
 #include "np-divs/div-funcs/div_l2.hpp"
 #include "np-divs/dkn.hpp"
+#include "np-divs/matrix_arrays.hpp"
 
 namespace NPDivs {
-
-////////////////////////////////////////////////////////////////////////////////
-// Some functions that are helpful for allocating/freeing matrix arrays
-
-template <typename Scalar>
-flann::Matrix<Scalar>* alloc_matrix_array(size_t n, size_t rows, size_t cols);
-
-template <typename Scalar>
-void free_matrix_array(flann::Matrix<Scalar> *array, size_t n);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Declarations of the main np_divs functions
@@ -560,23 +552,6 @@ void divcalc_diffbags_worker<Distance>::do_job(size_t i, size_t j) {
 ////////////////////////////////////////////////////////////////////////////////
 // Helper implementations
 
-template <typename Scalar>
-flann::Matrix<Scalar>* alloc_matrix_array(size_t n, size_t rows, size_t cols) {
-    typedef flann::Matrix<Scalar> Matrix;
-    size_t s = rows * cols;
-
-    Matrix* array = new Matrix[n];
-    for (size_t i = 0; i < n; i++)
-        array[i] = Matrix(new Scalar[s], rows, cols);
-    return array;
-}
-
-template <typename Scalar>
-void free_matrix_array(flann::Matrix<Scalar> *array, size_t n) {
-    for (size_t i = 0; i < n; i++)
-        delete[] array[i].ptr();
-    delete[] array;
-}
 
 size_t get_num_threads(size_t num_threads) {
 #if BOOST_VERSION >= 103500
