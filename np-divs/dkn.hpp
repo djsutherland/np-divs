@@ -8,8 +8,8 @@
 
 namespace NPDivs {
 
-template <typename Distance>
-std::vector<typename Distance::ResultType> DKN(
+template <typename Distance, typename ResultType>
+std::vector<ResultType> DKN(
         flann::Index<Distance> &index,
         const flann::Matrix<typename Distance::ElementType> &query,
         int k = 3,
@@ -38,7 +38,7 @@ std::vector<typename Distance::ResultType> DKN(
     index.knnSearch(query, indices, dists, k, search_params);
 
     // get out just the results we want
-    vector<DistanceType> dkn;
+    vector<ResultType> dkn;
     dkn.reserve(query.rows);
     if (take_sqrt)
         for (size_t i = 0; i < query.rows; i++)
@@ -51,6 +51,19 @@ std::vector<typename Distance::ResultType> DKN(
     delete[] dists.ptr();
 
     return dkn;
+}
+
+
+template <typename Distance>
+std::vector<typename Distance::ResultType> DKN(
+        flann::Index<Distance> &index,
+        const flann::Matrix<typename Distance::ElementType> &query,
+        int k = 3,
+        const flann::SearchParams &search_params = flann::SearchParams(),
+        bool take_sqrt = true)
+{
+    return DKN<Distance, typename Distance::ResultType>(
+            index, query, k, search_params, take_sqrt);
 }
 
 }

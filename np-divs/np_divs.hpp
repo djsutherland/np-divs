@@ -45,8 +45,7 @@ void free_matrix_array(flann::Matrix<Scalar> *array, size_t n);
   boost::ptr_vector<DivFunc> div_funcs; \
   div_funcs.push_back(new DivL2());
 
-// TODO: np_divs overloads that write into a vector<vector<vector<float> > >,
-//       or something similar
+// TODO: overloads that write into/take a vector< vector< vector<float> > > or something
 
 template <typename Scalar>
 void np_divs(
@@ -116,7 +115,7 @@ inline void free_indices(flann::Index<Distance>** indices, size_t n);
 
 
 template <typename Distance>
-std::vector<std::vector<typename Distance::ResultType> > get_rhos(
+std::vector<std::vector<float> > get_rhos(
         const flann::Matrix<typename Distance::ElementType> *bags,
         flann::Index<Distance> **indices,
         size_t n,
@@ -134,7 +133,7 @@ class divcalc_worker : boost::noncopyable {
 
     typedef flann::Matrix<typename Distance::ElementType> Matrix;
     typedef flann::Index<Distance> Index;
-    typedef std::vector<typename Distance::ResultType> DistVec;
+    typedef std::vector<float> DistVec;
     typedef std::vector<DistVec> DistVecVec;
     typedef std::pair<size_t, size_t> size_pair;
 
@@ -179,7 +178,7 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
 
     typedef flann::Matrix<typename Distance::ElementType> Matrix;
     typedef flann::Index<Distance> Index;
-    typedef std::vector<typename Distance::ResultType> DistVec;
+    typedef std::vector<float> DistVec;
     typedef std::vector<DistVec> DistVecVec;
     typedef std::pair<size_t, size_t> size_pair;
 
@@ -225,7 +224,7 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
 
     typedef flann::Matrix<typename Distance::ElementType> Matrix;
     typedef flann::Index<Distance> Index;
-    typedef std::vector<typename Distance::ResultType> DistVec;
+    typedef std::vector<float> DistVec;
     typedef std::vector<DistVec> DistVecVec;
     typedef std::pair<size_t, size_t> size_pair;
 
@@ -302,7 +301,7 @@ void np_divs(
 
     typedef flann::Matrix<Scalar> Matrix;
     typedef flann::Index<Distance> Index;
-    typedef vector<typename Distance::ResultType> DistVec;
+    typedef vector<float> DistVec;
 
     size_t num_dfs = div_funcs.size();
     size_t dim = bags[0].cols;
@@ -417,7 +416,7 @@ void np_divs(
 
     typedef flann::Matrix<Scalar> Matrix;
     typedef flann::Index<Distance> Index;
-    typedef vector<typename Distance::ResultType> DistVec;
+    typedef vector<float> DistVec;
 
     // are we actually comparing bags with themselves?
     // if so, this overload is somewhat more efficient
@@ -522,7 +521,7 @@ void divcalc_samebags_worker<Distance>::do_job(size_t i, size_t j) {
         Index &index = *indices[i];
         const DistVec &rho = rhos[i];
 
-        const DistVec &nu = DKN(index, bag, k, search_params);
+        const DistVec &nu = DKN<Distance, float>(index, bag, k, search_params);
 
         for (size_t df = 0; df < num_dfs; df++) {
             results[df][i][i] = div_funcs[df](rho, nu, rho, nu, dim, k);
@@ -532,8 +531,8 @@ void divcalc_samebags_worker<Distance>::do_job(size_t i, size_t j) {
         Index         &x_index = *indices[i], &y_index = *indices[j]; 
         const DistVec &rho_x = rhos[i],       &rho_y = rhos[j];
 
-        const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
-        const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
+        const DistVec &nu_x = DKN<Distance, float>(y_index, x_bag, k, search_params);
+        const DistVec &nu_y = DKN<Distance, float>(x_index, y_bag, k, search_params);
 
         for (size_t df = 0; df < num_dfs; df++) {
             const DivFunc &div_func = div_funcs[df];
@@ -550,8 +549,8 @@ void divcalc_diffbags_worker<Distance>::do_job(size_t i, size_t j) {
     const DistVec &rho_x = x_rhos[i],        &rho_y = y_rhos[j];
 
     // compute away
-    const DistVec &nu_x = DKN(y_index, x_bag, k, search_params);
-    const DistVec &nu_y = DKN(x_index, y_bag, k, search_params);
+    const DistVec &nu_x = DKN<Distance, float>(y_index, x_bag, k, search_params);
+    const DistVec &nu_y = DKN<Distance, float>(x_index, y_bag, k, search_params);
 
     for (size_t df = 0; df < num_dfs; df++) {
         results[df][i][j] = div_funcs[df](rho_x, nu_x, rho_y, nu_y, dim, k);
@@ -637,7 +636,7 @@ class rho_getter : boost::noncopyable {
     typedef flann::Index<Distance> Index;
     typedef typename Distance::ResultType Scalar;
     typedef flann::Matrix<Scalar> Matrix;
-    typedef std::vector<typename Distance::ResultType> DistVec;
+    typedef std::vector<float> DistVec;
 
     const Matrix * bags;
     Index ** indices;
@@ -675,7 +674,8 @@ class rho_getter : boost::noncopyable {
             }
 
             // compute
-            const DistVec &rho = DKN(*indices[i], bags[i], k+1, search_params);
+            const DistVec &rho = DKN<Distance, float>(
+                    *indices[i], bags[i], k+1, search_params);
 
             // write out results
             {
@@ -688,7 +688,7 @@ class rho_getter : boost::noncopyable {
 
 
 template <typename Distance>
-std::vector<std::vector<typename Distance::ResultType> > get_rhos(
+std::vector<std::vector<float> > get_rhos(
         const flann::Matrix<typename Distance::ElementType> *bags,
         flann::Index<Distance> **indices,
         size_t n,
@@ -698,12 +698,12 @@ std::vector<std::vector<typename Distance::ResultType> > get_rhos(
 {
     // TODO - if dimension is small enough, don't thread
 
-    std::vector<std::vector<typename Distance::ResultType> > rhos;
+    std::vector<std::vector<float> > rhos;
 
     if (num_threads == 1) {
         rhos.reserve(n);
         for (size_t i = 0; i < n; i++)
-            rhos.push_back(DKN(*indices[i], bags[i], k+1, search_params));
+            rhos.push_back(DKN<Distance, float>(*indices[i], bags[i], k+1, search_params));
 
     } else {
         rhos.resize(n);
