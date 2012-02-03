@@ -30,4 +30,10 @@
  ******************************************************************************/
 #include "np-divs/fix_terms.hpp"
 
-// templated code in header
+namespace NPDivs {
+
+// explicit instantiations
+template void fix_terms(std::vector<float> &terms, double ub);
+template void fix_terms(std::vector<double> &terms, double ub);
+
+}
