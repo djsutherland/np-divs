@@ -151,7 +151,7 @@ bool parse_args(int argc, const char ** argv, ProgOpts& opts) {
         ("num-threads",
             po::value<size_t>(&opts.num_threads)->default_value(0),
             "Number of threads to use for calculations. 0 means one per core.")
-        ("k",
+        ("neighbors,k",
             po::value<size_t>(&opts.k)->default_value(3),
             "The k for k-nearest-neighbor calculations.")
         ("index,i",
