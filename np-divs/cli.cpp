@@ -9,6 +9,7 @@
 
 #include <boost/program_options.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/utility.hpp>
 
 #include <flann/util/matrix.h>
 
@@ -17,7 +18,7 @@ using namespace std;
 using namespace boost;
 namespace po = boost::program_options;
 
-typedef struct s_popts {
+typedef struct s_popts : noncopyable {
     string x_bags_file;
     string y_bags_file;
     string results_file;
@@ -29,6 +30,25 @@ typedef struct s_popts {
 
     flann::IndexParams index_params;
     flann::SearchParams search_params;
+
+    void parse_div_funcs(const vector<string> &names) {
+        for (size_t i = 0; i < names.size(); i++) {
+            div_funcs.push_back(div_func_from_str(names[i]));
+        }
+    }
+
+    void parse_index(const string name) {
+        // TODO: more index types, support arguments
+        if (name == "linear" || name == "brute") {
+            index_params = flann::LinearIndexParams();
+
+        } else if (name == "kdtree" || name == "kd") {
+            index_params = flann::KDTreeSingleIndexParams();
+
+        } else {
+            throw domain_error((format("unknown index type %s") % name).str());
+        }
+    }
 } ProgOpts;
 
 
@@ -38,7 +58,6 @@ int main(int argc, const char ** argv) {
     typedef flann::Matrix<double> Matrix;
 
     ProgOpts opts;
-    opts.index_params = flann::KDTreeSingleIndexParams();
     opts.search_params = flann::SearchParams(64);
     if (!parse_args(argc, argv, opts))
         return 1;
@@ -91,11 +110,6 @@ int main(int argc, const char ** argv) {
     return 0;
 }
 
-void parse_div_funcs(ProgOpts &opts, const vector<string> &names) {
-    for (size_t i = 0; i < names.size(); i++) {
-        opts.div_funcs.push_back(div_func_from_str(names[i]));
-    }
-}
 
 // TODO nicer handling of matrix inputs
 // TODO optionally support HDF5 inputs
@@ -123,7 +137,7 @@ bool parse_args(int argc, const char ** argv, ProgOpts& opts) {
             "div(x_i, y_j). Use - for stdout.")
         ("div-func,f",
             po::value< vector<string> >()->composing()->required()
-               ->notifier(boost::bind(&parse_div_funcs, boost::ref(opts), _1)),
+               ->notifier(bind(&ProgOpts::parse_div_funcs, ref(opts), _1)),
             "Divergence functions to use; can be specified more than once. At "
             "least one is required. Format is name:arg1:arg2:..., where argN "
             "refers to the Nth argument to the corresponding DivFunc's "
@@ -140,6 +154,10 @@ bool parse_args(int argc, const char ** argv, ProgOpts& opts) {
         ("k",
             po::value<size_t>(&opts.k)->default_value(3),
             "The k for k-nearest-neighbor calculations.")
+        ("index,i",
+            po::value<string>()->default_value("kdtree")
+                ->notifier(bind(&ProgOpts::parse_index, ref(opts), _1)),
+            "The nearest-neighbor index to use. Options: linear, kdtree.")
     ;
 
     po::variables_map vm;
