@@ -63,12 +63,8 @@ typedef struct s_popts : noncopyable {
     flann::SearchParams search_params;
 
     void parse_div_funcs(const vector<string> &names) {
-        if (names.size() == 0) {
-            div_funcs.push_back(div_func_from_str("l2"));
-        } else {
-            for (size_t i = 0; i < names.size(); i++) {
-                div_funcs.push_back(div_func_from_str(names[i]));
-            }
+        for (size_t i = 0; i < names.size(); i++) {
+            div_funcs.push_back(div_func_from_str(names[i]));
         }
     }
 
@@ -98,6 +94,10 @@ int main(int argc, char ** argv) {
         return 1;
 
     size_t num_df = opts.div_funcs.size();
+    if (num_df == 0) {
+        cerr << "Error: at least one div func is required\n";
+        return 1;
+    }
 
     // load input bags
     // TODO - gracefully handle nonexisting files
