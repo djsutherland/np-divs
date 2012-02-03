@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 project (np_divs)
 
-if (NOT RUN_EXPENSIVE_TESTS)
-    set(RUN_EXPENSIVE_TESTS OFF)
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-
-find_package(Boost COMPONENTS thread REQUIRED)
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS thread program_options REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FLANN REQUIRED flann)

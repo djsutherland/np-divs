@@ -1,6 +1,5 @@
 file(GLOB_RECURSE DIV_FUNCS div-funcs/*.[ch]pp)
 
-find_package(Boost COMPONENTS thread program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
@@ -9,6 +8,17 @@ link_directories(${FLANN_LIBRARY_DIRS})
 if(FLANN_CFLAGS)
     add_definitions(${FLANN_CFLAGS})
 endif(FLANN_CFLAGS)
+
+add_library(np-divs_s STATIC
+    np_divs.cpp
+    fix_terms.cpp
+    gamma.cpp
+    div_func_from_str.cpp
+    ${DIV_FUNCS}
+)
+if (CMAKE_COMPILER_IS_GNUCC)
+    set_target_properties(np-divs_s PROPERTIES COMPILE_FLAGS -fPIC)
+endif()
 
 add_library(np-divs SHARED
     np_divs.cpp
@@ -23,10 +33,10 @@ add_executable(npdivs
     cli.cpp
     matrix_io.cpp
 )
-target_link_libraries(npdivs np-divs ${Boost_LIBRARIES})
+target_link_libraries(npdivs np-divs_s ${Boost_LIBRARIES})
 
 install(
-    TARGETS np-divs npdivs
+    TARGETS np-divs np-divs_s npdivs
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
