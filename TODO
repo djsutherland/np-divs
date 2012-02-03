@@ -1,9 +1,10 @@
-- c / matlab / python bindings
+- c / python bindings
+    - maybe: real matlab bindings, if the boost clash can be figured out
+
+- CLI improvements
 
 - include GTest as a submodule or something?
     https://groups.google.com/forum/#!topic/googletestframework/Zo7_HOv1MJ0
-
-- add a CLI?
 
 - figure out some clever way to avoid repeated work in div funcs?
     - ie to do both BC and Hellinger without recomputing the common alpha part
