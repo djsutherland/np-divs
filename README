@@ -5,6 +5,7 @@ described in:
     Nonparametric divergence estimation with applications to machine learning
         on distributions.
     Uncertainty in Artificial Intelligence, 2011.
+    http://autonlab.org/autonweb/20287.html
 
 Requirements:
   * FLANN (people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN)
