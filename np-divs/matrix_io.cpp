@@ -1,4 +1,5 @@
-#include "matrix_reader.hpp"
+#include "np-divs/matrix_io.hpp"
+#include "np-divs/matrix_arrays.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -10,6 +11,8 @@
 #include <boost/format.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <flann/util/matrix.h>
+
 namespace NPDivs {
 
 using boost::algorithm::trim;
@@ -18,10 +21,11 @@ using std::domain_error;
 using std::istream;
 using std::string;
 using std::vector;
+using flann::Matrix;
 
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
-vector< vector<double> > matrix_from_csv(istream &in, size_t dim) {
+vector< vector<double> > matrix_vector_from_csv(istream &in, size_t dim) {
     /* Reads a matrix of doubles from CSV-style input, stopping once a
      * blank line has been consumed.
      *
@@ -58,7 +62,8 @@ vector< vector<double> > matrix_from_csv(istream &in, size_t dim) {
     return matrix;
 }
 
-vector< vector< vector<double> > > matrices_from_csv(istream &in, size_t dim) {
+vector< vector< vector<double> > >
+matrices_vector_from_csv(istream &in, size_t dim) {
     /* Reads a group of matrices of doubles from CSV-style input, with each
      * matrix separated by a single blank line.
      *
@@ -68,7 +73,7 @@ vector< vector< vector<double> > > matrices_from_csv(istream &in, size_t dim) {
      */
     vector< vector< vector<double> > > matrices;
     while (true) {
-        vector< vector<double> > m = matrix_from_csv(in, dim);
+        vector< vector<double> > m = matrix_vector_from_csv(in, dim);
         if (m.size() == 0)
             break;
         else if (dim == 0)
@@ -78,5 +83,22 @@ vector< vector< vector<double> > > matrices_from_csv(istream &in, size_t dim) {
     }
     return matrices;
 }
+
+Matrix<double> matrix_from_csv(istream &in) {
+    return vector_to_matrix(matrix_vector_from_csv(in));
+}
+
+Matrix<double>* matrices_from_csv(istream &in, size_t &n) {
+    vector<vector<vector<double> > > vec = matrices_vector_from_csv(in);
+    n = vec.size();
+    return vector_to_matrix_array(vec);
+}
+
+// instantiations of templates
+template void matrix_to_csv(std::ostream&, Matrix<double>);
+template void matrix_to_csv(std::ostream&, Matrix<float>);
+
+template void matrix_array_to_csv(std::ostream&, Matrix<double>*, size_t n);
+template void matrix_array_to_csv(std::ostream&, Matrix<float>*, size_t n);
 
 } // end namespace
