@@ -2,6 +2,9 @@
     - maybe: real matlab bindings, if the boost clash can be figured out
 
 - CLI improvements
+    - progress bar
+
+- decide on index type more intelligently
 
 - include GTest as a submodule or something?
     https://groups.google.com/forum/#!topic/googletestframework/Zo7_HOv1MJ0
