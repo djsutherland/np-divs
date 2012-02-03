@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 
+#include <boost/bind.hpp>
 #include <boost/program_options.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/utility.hpp>
@@ -32,8 +33,12 @@ typedef struct s_popts : noncopyable {
     flann::SearchParams search_params;
 
     void parse_div_funcs(const vector<string> &names) {
-        for (size_t i = 0; i < names.size(); i++) {
-            div_funcs.push_back(div_func_from_str(names[i]));
+        if (names.size() == 0) {
+            div_funcs.push_back(div_func_from_str("l2"));
+        } else {
+            for (size_t i = 0; i < names.size(); i++) {
+                div_funcs.push_back(div_func_from_str(names[i]));
+            }
         }
     }
 
@@ -52,9 +57,9 @@ typedef struct s_popts : noncopyable {
 } ProgOpts;
 
 
-bool parse_args(int argc, const char ** argv, ProgOpts& opts);
+bool parse_args(int argc, char ** argv, ProgOpts& opts);
 
-int main(int argc, const char ** argv) {
+int main(int argc, char ** argv) {
     typedef flann::Matrix<double> Matrix;
 
     ProgOpts opts;
@@ -115,7 +120,7 @@ int main(int argc, const char ** argv) {
 // TODO optionally support HDF5 inputs
 // TODO positional arguments for x_bags, y_bags
 // TODO support setting {index,search}_params
-bool parse_args(int argc, const char ** argv, ProgOpts& opts) {
+bool parse_args(int argc, char ** argv, ProgOpts& opts) {
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Produce this help message.")
@@ -136,10 +141,10 @@ bool parse_args(int argc, const char ** argv, ProgOpts& opts) {
             "Where to write CSV-style matrix of results, where m[i,j] = "
             "div(x_i, y_j). Use - for stdout.")
         ("div-func,f",
-            po::value< vector<string> >()->composing()->required()
+            po::value< vector<string> >()->composing()
                ->notifier(bind(&ProgOpts::parse_div_funcs, ref(opts), _1)),
-            "Divergence functions to use; can be specified more than once. At "
-            "least one is required. Format is name:arg1:arg2:..., where argN "
+            "Divergence functions to use; can be specified more than once. If "
+            "none passed, uses L2. Format is name:arg1:arg2:..., where argN "
             "refers to the Nth argument to the corresponding DivFunc's "
             "constructor. Some support a first argument specifying a "
             "parameter: renyi:.99 means the Renyi-.99 divergence. All support "
