@@ -73,12 +73,12 @@ end
 for ind = 1 : numel(div_funcs)
     cmd = [cmd ' -f ' div_funcs{ind}]; %#ok<AGROW>
 end
-disp(cmd)
 
 % call it!
 [status, output] = system(cmd); % TODO handle stdout better?
 if status
     disp(output)
+    delete(xfile, resultsfile); if do_y; delete(yfile); end
     return
 end
 
@@ -86,7 +86,7 @@ end
 Ds = readresult(resultsfile);
 
 % clean up our temp files
-delete(xfile, yfile, resultsfile);
+delete(xfile, resultsfile); if do_y; delete(yfile); end
 
 end
 
