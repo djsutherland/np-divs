@@ -5,7 +5,6 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost COMPONENTS thread program_options REQUIRED)
 
 find_package(PkgConfig REQUIRED)

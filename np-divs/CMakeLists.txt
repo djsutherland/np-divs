@@ -9,17 +9,6 @@ if(FLANN_CFLAGS)
     add_definitions(${FLANN_CFLAGS})
 endif(FLANN_CFLAGS)
 
-add_library(np-divs_s STATIC
-    np_divs.cpp
-    fix_terms.cpp
-    gamma.cpp
-    div_func_from_str.cpp
-    ${DIV_FUNCS}
-)
-if (CMAKE_COMPILER_IS_GNUCC)
-    set_target_properties(np-divs_s PROPERTIES COMPILE_FLAGS -fPIC)
-endif()
-
 add_library(np-divs SHARED
     np_divs.cpp
     fix_terms.cpp
@@ -33,10 +22,10 @@ add_executable(npdivs
     cli.cpp
     matrix_io.cpp
 )
-target_link_libraries(npdivs np-divs_s ${Boost_LIBRARIES})
+target_link_libraries(npdivs np-divs ${Boost_LIBRARIES})
 
 install(
-    TARGETS np-divs np-divs_s npdivs
+    TARGETS np-divs npdivs
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
