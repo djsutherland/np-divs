@@ -1,9 +1,8 @@
 This is a C++ implementation of the nonparametric divergence estimators
 described by:
 
-Barnabas Poczos, Liang Xiong, and Jeff Schneider, 2011.
-Nonparametric divergence estimation with applications to machine learning
-on distributions.
+Barnabas Poczos, Liang Xiong, and Jeff Schneider (2011).
+_Nonparametric divergence estimation with applications to machine learning on distributions._
 Uncertainty in Artificial Intelligence.
 http://autonlab.org/autonweb/20287.html
 
@@ -13,7 +12,7 @@ by the authors above.
 
 
 Requirements
-============
+------------
 
   * [FLANN](http://people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN)
   * [Boost](http://boost.org) - tested back to 1.33.1, 1.35 or newer preferred
@@ -23,7 +22,7 @@ Requirements
 
 
 Installation
-============
+------------
 
 To build:
 
