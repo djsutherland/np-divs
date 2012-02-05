@@ -31,8 +31,8 @@ Installation
 
 This will install the `npdivs` command-line interface (run `npdivs -h` for
 help) as well as the shared library named e.g. `libnp-divs.so` (depending on
-platform) and header files. By default, these will be placed in `/usr/local`; to
-install to a different location, use something like:
+platform) and header files. By default, these will be placed in `/usr/local`;
+to install to a different location, use something like:
 
     cmake .. -DCMAKE_INSTALL_PREFIX=$HOME
 
