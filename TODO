@@ -17,3 +17,6 @@
     - one where bag sizes are different
         - but the matlab estimator is wrong here:
           L2 crashes, alpha-based have wrong constant
+
+- used a fused-source version of gtest
+    - need to make that work with cmake...
