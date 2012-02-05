@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef MATRIX_ARRAYS_HPP_
-#define MATRIX_ARRAYS_HPP_
+#ifndef NPDIVS_MATRIX_ARRAYS_HPP_
+#define NPDIVS_MATRIX_ARRAYS_HPP_
 #include "np-divs/basics.hpp"
 
 #include <stdexcept>

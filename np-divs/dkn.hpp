@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef DKN_HPP_
-#define DKN_HPP_
+#ifndef NPDIVS_DKN_HPP_
+#define NPDIVS_DKN_HPP_
 #include "np-divs/basics.hpp"
 
 #include <cmath>

@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef MATRIX_READER_HPP_
-#define MATRIX_READER_HPP_
+#ifndef NPDIVS_MATRIX_READER_HPP_
+#define NPDIVS_MATRIX_READER_HPP_
 #include "basics.hpp"
 
 #include <iostream>

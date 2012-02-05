@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef DIV_RENYI_HPP
-#define DIV_RENYI_HPP
+#ifndef NPDIVS_DIV_RENYI_HPP
+#define NPDIVS_DIV_RENYI_HPP
 #include "np-divs/basics.hpp"
 
 #include <string>

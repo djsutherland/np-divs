@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef DIV_BC_HPP
-#define DIV_BC_HPP
+#ifndef NPDIVS_DIV_BC_HPP
+#define NPDIVS_DIV_BC_HPP
 #include "np-divs/basics.hpp"
 
 #include <string>

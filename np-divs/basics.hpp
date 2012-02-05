@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef BASICS_HPP_
-#define BASICS_HPP_
+#ifndef NPDIVS_BASICS_HPP_
+#define NPDIVS_BASICS_HPP_
 
 #define _USE_MATH_DEFINES // to get M_PI from <cmath>
 

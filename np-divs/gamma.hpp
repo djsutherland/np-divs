@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef GAMMA_HPP_
-#define GAMMA_HPP_
+#ifndef NPDIVS_GAMMA_HPP_
+#define NPDIVS_GAMMA_HPP_
 #include "np-divs/basics.hpp"
 
 namespace NPDivs {
