@@ -80,6 +80,14 @@ void np_divs(
 template <typename Scalar>
 void np_divs(
     const flann::Matrix<Scalar> *bags, size_t num_bags,
+    const DivFunc &div_func,
+    flann::Matrix<double> *results,
+    const DivParams &div_params,
+    bool verify_results_alloced = true);
+
+template <typename Scalar>
+void np_divs(
+    const flann::Matrix<Scalar> *bags, size_t num_bags,
     const boost::ptr_vector<DivFunc> &div_funcs,
     flann::Matrix<double> *results,
     const DivParams &div_params,
@@ -89,6 +97,15 @@ template <typename Scalar>
 void np_divs(
     const flann::Matrix<Scalar> *x_bags, size_t num_x,
     const flann::Matrix<Scalar> *y_bags, size_t num_y,
+    flann::Matrix<double>* results,
+    const DivParams &div_params,
+    bool verify_results_alloced = true);
+
+template <typename Scalar>
+void np_divs(
+    const flann::Matrix<Scalar> *x_bags, size_t num_x,
+    const flann::Matrix<Scalar> *y_bags, size_t num_y,
+    const DivFunc &div_func,
     flann::Matrix<double>* results,
     const DivParams &div_params,
     bool verify_results_alloced = true);
@@ -294,6 +311,21 @@ template <typename Scalar>
 void np_divs(
         const flann::Matrix<Scalar> *bags,
         size_t num_bags,
+        const DivFunc &div_func,
+        flann::Matrix<double>* results,
+        const DivParams &params,
+        bool ver_alloc)
+{
+    boost::ptr_vector<DivFunc> div_funcs;
+    div_funcs.push_back(new_clone(div_func));
+    return np_divs(bags, num_bags, div_funcs, results, params, ver_alloc);
+}
+
+
+template <typename Scalar>
+void np_divs(
+        const flann::Matrix<Scalar> *bags,
+        size_t num_bags,
         const boost::ptr_vector<DivFunc> &div_funcs,
         flann::Matrix<double>* results,
         const DivParams &params,
@@ -370,6 +402,22 @@ void np_divs(
     }
 
     free_indices(indices, num_bags);
+}
+
+
+template <typename Scalar>
+void np_divs(
+        const flann::Matrix<Scalar> *x_bags, size_t num_x,
+        const flann::Matrix<Scalar> *y_bags, size_t num_y,
+        const DivFunc &div_func,
+        flann::Matrix<double>* results,
+        const DivParams &params,
+        bool ver_alloc)
+{
+    boost::ptr_vector<DivFunc> div_funcs;
+    div_funcs.push_back(new_clone(div_func));
+    return np_divs(x_bags, num_x, y_bags, num_y, div_funcs, results, params,
+                   ver_alloc);
 }
 
 

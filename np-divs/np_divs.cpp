@@ -42,6 +42,13 @@ template void np_divs(
 
 template void np_divs(
     const flann::Matrix<double> *bags, size_t num_bags,
+    const DivFunc &div_func,
+    flann::Matrix<double> *results,
+    const DivParams &div_params,
+    bool verify_results_alloced);
+
+template void np_divs(
+    const flann::Matrix<double> *bags, size_t num_bags,
     const boost::ptr_vector<DivFunc> &div_funcs,
     flann::Matrix<double> *results,
     const DivParams &div_params,
@@ -50,6 +57,14 @@ template void np_divs(
 template void np_divs(
     const flann::Matrix<double> *x_bags, size_t num_x,
     const flann::Matrix<double> *y_bags, size_t num_y,
+    flann::Matrix<double>* results,
+    const DivParams &div_params,
+    bool verify_results_alloced);
+
+template void np_divs(
+    const flann::Matrix<double> *x_bags, size_t num_x,
+    const flann::Matrix<double> *y_bags, size_t num_y,
+    const DivFunc &div_func,
     flann::Matrix<double>* results,
     const DivParams &div_params,
     bool verify_results_alloced);
