@@ -1,10 +1,9 @@
-file(GLOB_RECURSE DIV_FUNCS div-funcs/*.[ch]pp)
+file(GLOB_RECURSE DIV_FUNCS div-funcs/*.cpp)
 
 add_library(np-divs SHARED
     np_divs.cpp
     fix_terms.cpp
     gamma.cpp
-    div_func_from_str.cpp
     ${DIV_FUNCS}
 )
 target_link_libraries(np-divs ${FLANN_LIBRARIES} ${Boost_LIBRARIES})

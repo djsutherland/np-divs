@@ -28,7 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#include "div_func_from_str.hpp"
+#include "np-divs/div-funcs/from_str.hpp"
 
 #include "np-divs/div-funcs/div_func.hpp"
 #include "np-divs/div-funcs/div_alpha.hpp"

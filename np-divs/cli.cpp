@@ -31,7 +31,7 @@
 #include "np-divs/np_divs.hpp"
 #include "np-divs/matrix_io.hpp"
 #include "np-divs/div-funcs/div_func.hpp"
-#include "np-divs/div_func_from_str.hpp"
+#include "np-divs/div-funcs/from_str.hpp"
 
 #include <iostream>
 #include <fstream>
