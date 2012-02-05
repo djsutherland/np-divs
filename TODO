@@ -6,9 +6,6 @@
 
 - decide on index type more intelligently
 
-- include GTest as a submodule or something?
-    https://groups.google.com/forum/#!topic/googletestframework/Zo7_HOv1MJ0
-
 - figure out some clever way to avoid repeated work in div funcs?
     - ie to do both BC and Hellinger without recomputing the common alpha part
     - possibly not worth the effort...

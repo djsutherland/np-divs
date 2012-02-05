@@ -6,16 +6,18 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(Boost COMPONENTS thread program_options REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FLANN REQUIRED flann)
-
+include_directories(${FLANN_INCLUDE_DIRS})
+link_directories(${FLANN_LIBRARY_DIRS})
+if(FLANN_CFLAGS)
+    add_definitions(${FLANN_CFLAGS})
+endif(FLANN_CFLAGS)
 
 include_directories(${np_divs_SOURCE_DIR})
 
 add_subdirectory(np-divs)
-
-if (BUILD_TESTING)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+add_subdirectory(test)

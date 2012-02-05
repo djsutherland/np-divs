@@ -1,14 +1,5 @@
 file(GLOB_RECURSE DIV_FUNCS div-funcs/*.[ch]pp)
 
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-
-include_directories(${FLANN_INCLUDE_DIRS})
-link_directories(${FLANN_LIBRARY_DIRS})
-if(FLANN_CFLAGS)
-    add_definitions(${FLANN_CFLAGS})
-endif(FLANN_CFLAGS)
-
 add_library(np-divs SHARED
     np_divs.cpp
     fix_terms.cpp
