@@ -28,69 +28,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#include "np-divs/np_divs.hpp"
+#ifndef NPDIVS_DIV_PARAMS_HPP_
+#define NPDIVS_DIV_PARAMS_HPP_
+#include "np-divs/basics.hpp"
 
-namespace NPDivs{
+#include <flann/util/params.h>
 
-// explicit instantiations for np_divs() overloads with doubles
+namespace NPDivs {
 
-template void np_divs(
-    const flann::Matrix<double> *bags, size_t num_bags,
-    flann::Matrix<double> *results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
+struct DivParams {
+    int k; // the k of our k-nearest-neighbor searches
+    flann::IndexParams index_params;
+    flann::SearchParams search_params;
+    size_t num_threads; // 0 means boost::thread::hardware_concurrency()
 
-template void np_divs(
-    const flann::Matrix<double> *bags, size_t num_bags,
-    const boost::ptr_vector<DivFunc> &div_funcs,
-    flann::Matrix<double> *results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
+    DivParams(
+        int k = 3,
+        flann::IndexParams index_params = flann::KDTreeSingleIndexParams(),
+        flann::SearchParams search_params = flann::SearchParams(-1),
+        size_t num_threads = 0)
+    :
+        k(k), index_params(index_params), search_params(search_params),
+        num_threads(num_threads)
+    { }
 
-template void np_divs(
-    const flann::Matrix<double> *x_bags, size_t num_x,
-    const flann::Matrix<double> *y_bags, size_t num_y,
-    flann::Matrix<double>* results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
+};
 
-template void np_divs(
-    const flann::Matrix<double> *x_bags, size_t num_x,
-    const flann::Matrix<double> *y_bags, size_t num_y,
-    const boost::ptr_vector<DivFunc> &div_funcs,
-    flann::Matrix<double>* results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
-
-
-// explicit instantiations for np_divs() overloads with floats
-
-template void np_divs(
-    const flann::Matrix<float> *bags, size_t num_bags,
-    flann::Matrix<double> *results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
-
-template void np_divs(
-    const flann::Matrix<float> *bags, size_t num_bags,
-    const boost::ptr_vector<DivFunc> &div_funcs,
-    flann::Matrix<double> *results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
-
-template void np_divs(
-    const flann::Matrix<float> *x_bags, size_t num_x,
-    const flann::Matrix<float> *y_bags, size_t num_y,
-    flann::Matrix<double>* results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
-
-template void np_divs(
-    const flann::Matrix<float> *x_bags, size_t num_x,
-    const flann::Matrix<float> *y_bags, size_t num_y,
-    const boost::ptr_vector<DivFunc> &div_funcs,
-    flann::Matrix<double>* results,
-    const DivParams &div_params,
-    bool verify_results_alloced);
-
-} // end namespace
+}
+#endif

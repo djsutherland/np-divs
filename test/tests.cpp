@@ -268,14 +268,14 @@ TEST(UtilitiesTest, LogGamma) {
 class NPDivTest : public ::testing::Test {
     protected:
 
-    NPDivTest() : index_params(flann::KDTreeSingleIndexParams()),
-                  search_params(SearchParams(flann::FLANN_CHECKS_UNLIMITED))
+    NPDivTest() :
+        params(DivParams(3, flann::KDTreeSingleIndexParams(),
+                            SearchParams(flann::FLANN_CHECKS_UNLIMITED)))
     {}
 
     virtual ~NPDivTest() {}
 
-    IndexParams index_params;
-    SearchParams search_params;
+    DivParams params;
 };
 
 TEST_F(NPDivTest, DKNTwoD) {
@@ -300,10 +300,10 @@ TEST_F(NPDivTest, DKNTwoD) {
     vector<float> expected;
     expected += 3.8511, 7.3594, 5.2820, 4.6111;
 
-    Index<L2<float> > index(dataset, index_params);
+    Index<L2<float> > index(dataset, params.index_params);
     index.buildIndex();
 
-    vector<float> results = NPDivs::DKN(index, query, 2, search_params);
+    vector<float> results = NPDivs::DKN(index, query, 2, params.search_params);
 
     for (size_t i = 0; i < expected.size(); i++)
         EXPECT_NEAR(results[i], expected[i], .01);
@@ -367,8 +367,8 @@ class NPDivDataTest : public NPDivTest {
         MatrixD* results =
             alloc_matrix_array<double>(num_df, num_bags, num_bags);
 
-        np_divs(bags, num_bags, div_funcs, results, 3,
-                index_params, search_params, num_threads);
+        params.num_threads = num_threads;
+        np_divs(bags, num_bags, div_funcs, results, params);
 
         expect_near_matrix_array(results, expected, num_df);
 
@@ -386,9 +386,9 @@ class NPDivDataTest : public NPDivTest {
                 for (size_t j = 0; j < num_per_group; j++)
                     _expected[df][i][j] = expected[df][i][num_per_group + j];
 
+        params.num_threads = num_threads;
         np_divs(bags, num_per_group, bags + num_per_group, num_per_group,
-                div_funcs, results, 3,
-                index_params, search_params, num_threads);
+                div_funcs, results, params);
 
         expect_near_matrix_array(results, _expected, num_df);
 
@@ -428,7 +428,7 @@ class Gaussians50DTest : public NPDivDataTest {
     typedef NPDivDataTest super;
 protected:
     Gaussians50DTest() : super() {
-        index_params = flann::LinearIndexParams();
+        params.index_params = flann::LinearIndexParams();
         load_bags("gaussian-50");
     }
     ~Gaussians50DTest() { free_bags(); }

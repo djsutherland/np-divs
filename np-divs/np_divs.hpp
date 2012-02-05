@@ -51,6 +51,7 @@
 
 #include "np-divs/div-funcs/div_func.hpp"
 #include "np-divs/div-funcs/div_l2.hpp"
+#include "np-divs/div_params.hpp"
 #include "np-divs/dkn.hpp"
 #include "np-divs/matrix_arrays.hpp"
 
@@ -67,16 +68,13 @@ namespace NPDivs {
   boost::ptr_vector<DivFunc> div_funcs; \
   div_funcs.push_back(new DivL2());
 
-// TODO: overloads that write into/take a vector< vector< vector<float> > > or something
+// TODO: overloads that write into a vector< vector< vector<float> > >
 
 template <typename Scalar>
 void np_divs(
     const flann::Matrix<Scalar> *bags, size_t num_bags,
     flann::Matrix<double> *results,
-    int k = 3,
-    const flann::IndexParams &index_params = INDEX_PARAMS,
-    const flann::SearchParams &search_params = SEARCH_PARAMS,
-    size_t num_threads = 0,
+    const DivParams &div_params,
     bool verify_results_alloced = true);
 
 template <typename Scalar>
@@ -84,10 +82,7 @@ void np_divs(
     const flann::Matrix<Scalar> *bags, size_t num_bags,
     const boost::ptr_vector<DivFunc> &div_funcs,
     flann::Matrix<double> *results,
-    int k = 3,
-    const flann::IndexParams &index_params = INDEX_PARAMS,
-    const flann::SearchParams &search_params = SEARCH_PARAMS,
-    size_t num_threads = 0,
+    const DivParams &div_params,
     bool verify_results_alloced = true);
 
 template <typename Scalar>
@@ -95,10 +90,7 @@ void np_divs(
     const flann::Matrix<Scalar> *x_bags, size_t num_x,
     const flann::Matrix<Scalar> *y_bags, size_t num_y,
     flann::Matrix<double>* results,
-    int k = 3,
-    const flann::IndexParams &index_params = INDEX_PARAMS,
-    const flann::SearchParams &search_params = SEARCH_PARAMS,
-    size_t num_threads = 0,
+    const DivParams &div_params,
     bool verify_results_alloced = true);
 
 template <typename Scalar>
@@ -107,10 +99,7 @@ void np_divs(
     const flann::Matrix<Scalar> *y_bags, size_t num_y,
     const boost::ptr_vector<DivFunc> &div_funcs,
     flann::Matrix<double>* results,
-    int k = 3,
-    const flann::IndexParams &index_params = INDEX_PARAMS,
-    const flann::SearchParams &search_params = SEARCH_PARAMS,
-    size_t num_threads = 0,
+    const DivParams &div_params,
     bool verify_results_alloced = true);
 
 
@@ -293,16 +282,12 @@ void np_divs(
         const flann::Matrix<Scalar> *bags,
         size_t num_bags,
         flann::Matrix<double>* results,
-        int k,
-        const flann::IndexParams &index_params,
-        const flann::SearchParams &search_params,
-        size_t num_threads,
-        bool verify_results_alloced)
+        const DivParams &params,
+        bool ver_alloc)
 {
     DEFAULT_DIV_FUNCS
 
-    return np_divs(bags, num_bags, div_funcs, results, k, index_params,
-            search_params, num_threads, verify_results_alloced);
+    return np_divs(bags, num_bags, div_funcs, results, params, ver_alloc);
 }
 
 template <typename Scalar>
@@ -311,11 +296,8 @@ void np_divs(
         size_t num_bags,
         const boost::ptr_vector<DivFunc> &div_funcs,
         flann::Matrix<double>* results,
-        int k,
-        const flann::IndexParams &index_params,
-        const flann::SearchParams &search_params,
-        size_t num_threads,
-        bool verify_results_alloced)
+        const DivParams &params,
+        bool ver_alloc)
 {
     using std::vector;
 
@@ -329,15 +311,21 @@ void np_divs(
     size_t dim = bags[0].cols;
 
     // some setup
-    if (verify_results_alloced)
+    if (ver_alloc)
         verify_allocated(results, num_dfs, num_bags, num_bags);
 
-    num_threads = get_num_threads(num_threads);
+    int k = params.k;
+    if (k < 1)
+        throw std::domain_error("np_divs: k < 1 is nonsensical");
+    size_t num_threads = get_num_threads(params.num_threads);
 
-    Index** indices = make_indices<Distance>(bags, num_bags, index_params);
+    // build kd-trees or whatever
+    Index** indices = make_indices<Distance>(
+            bags, num_bags, params.index_params);
 
+    // do nearest-neighbor searches for each bag to itself
     const vector<DistVec> &rhos =
-        get_rhos(bags, indices, num_bags, k, search_params, num_threads);
+        get_rhos(bags, indices, num_bags, k, params.search_params, num_threads);
 
     // this queue will tell threads what to do
     std::queue<std::pair<size_t, size_t> > jobs;
@@ -350,7 +338,7 @@ void np_divs(
     // compute away!
     if (num_threads == 1) {
         divcalc_samebags_worker<Distance> worker(
-                bags, indices, rhos, div_funcs, k, dim, search_params,
+                bags, indices, rhos, div_funcs, k, dim, params.search_params,
                 results, jobs_mutex, jobs
         );
 
@@ -373,7 +361,7 @@ void np_divs(
         for (size_t i = 0; i < num_threads; i++) {
             // create the worker
             workers.push_back(new divcalc_samebags_worker<Distance>(
-                bags, indices, rhos, div_funcs, k, dim, search_params,
+                bags, indices, rhos, div_funcs, k, dim, params.search_params,
                 results, jobs_mutex, jobs
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
@@ -390,16 +378,13 @@ void np_divs(
         const flann::Matrix<Scalar> *x_bags, size_t num_x,
         const flann::Matrix<Scalar> *y_bags, size_t num_y,
         flann::Matrix<double>* results,
-        int k,
-        const flann::IndexParams &index_params,
-        const flann::SearchParams &search_params,
-        size_t num_threads,
-        bool verify_results_alloced)
+        const DivParams &params,
+        bool ver_alloc)
 {
     DEFAULT_DIV_FUNCS
 
-    return np_divs(x_bags, num_x, y_bags, num_y, div_funcs, results, k,
-            index_params, search_params, num_threads, verify_results_alloced);
+    return np_divs(x_bags, num_x, y_bags, num_y, div_funcs, results, params,
+                   ver_alloc);
 }
 
 
@@ -409,11 +394,8 @@ void np_divs(
     const flann::Matrix<Scalar>* y_bags, size_t num_y,
     const boost::ptr_vector<DivFunc> &div_funcs,
     flann::Matrix<double>* results,
-    int k,
-    const flann::IndexParams &index_params,
-    const flann::SearchParams &search_params,
-    size_t num_threads,
-    bool verify_results_alloced)
+    const DivParams &ps,
+    bool ver_alloc)
 {   /* Calculates the matrix of divergences between x_bags and y_bags for
      * each of the passed div_funcs, and writes them into the preallocated
      * array of matrices (div_funcs.size() bags, each with num_x rows and
@@ -440,29 +422,32 @@ void np_divs(
     typedef flann::Index<Distance> Index;
     typedef vector<float> DistVec;
 
-    // are we actually comparing bags with themselves?
-    // if so, this overload is somewhat more efficient
+    // save work if we're actually comparing bags to themselves
     if (y_bags == NULL || y_bags == x_bags)
-        return np_divs(x_bags, num_x, div_funcs, results, k, index_params,
-                search_params, num_threads, verify_results_alloced);
+        return np_divs(x_bags, num_x, div_funcs, results, ps, ver_alloc);
 
     // initial setup work
     size_t num_dfs = div_funcs.size();
     size_t dim = x_bags[0].cols;
     // TODO: check that y_bags[0] (all bags?) is the same dimensions
 
-    num_threads = get_num_threads(num_threads);
+    int k = ps.k;
+    if (k < 1)
+        throw std::domain_error("np_divs: k < 1 is nonsensical");
+    size_t num_threads = get_num_threads(ps.num_threads);
 
-    if (verify_results_alloced)
+    if (ver_alloc)
         verify_allocated(results, num_dfs, num_x, num_y);
 
-    Index** x_indices = make_indices<Distance>(x_bags, num_x, index_params);
-    Index** y_indices = make_indices<Distance>(y_bags, num_y, index_params);
+    // build kd trees or whatever
+    Index** x_indices = make_indices<Distance>(x_bags, num_x, ps.index_params);
+    Index** y_indices = make_indices<Distance>(y_bags, num_y, ps.index_params);
 
+    // do nearest-neighbor searches for each bag to itself
     const vector<DistVec> &x_rhos =
-            get_rhos(x_bags, x_indices, num_x, k, search_params, num_threads);
+           get_rhos(x_bags, x_indices, num_x, k, ps.search_params, num_threads);
     const vector<DistVec> &y_rhos =
-            get_rhos(y_bags, y_indices, num_y, k, search_params, num_threads);
+           get_rhos(y_bags, y_indices, num_y, k, ps.search_params, num_threads);
 
     // compute the divergences!
     //
@@ -479,7 +464,7 @@ void np_divs(
     if (num_threads <= 1) {
         divcalc_diffbags_worker<Distance> worker(
             x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-            div_funcs, k, dim, search_params, results, jobs_mutex, jobs
+            div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs
         );
 
         // forget the queue and lock, just do_job directly
@@ -503,7 +488,7 @@ void np_divs(
             // create the worker
             workers.push_back(new divcalc_diffbags_worker<Distance>(
                 x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-                div_funcs, k, dim, search_params, results, jobs_mutex, jobs
+                div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
