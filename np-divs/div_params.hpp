@@ -32,7 +32,7 @@
 #define NPDIVS_DIV_PARAMS_HPP_
 #include "np-divs/basics.hpp"
 
-#include <flann/util/params.h>
+#include <flann/flann.hpp>
 
 namespace NPDivs {
 
