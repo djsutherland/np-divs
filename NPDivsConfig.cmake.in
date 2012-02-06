@@ -1,0 +1,29 @@
+# Config file for NPDivs. Defines:
+#   NPDIVS_INCLUDE_DIRS
+#   NPDIVS_LIBRARY_DIRS
+#   NPDIVS_LIBRARIES
+#   NPDIVS_EXECUTABLE
+
+# compute paths
+get_filename_component(NPDIVS_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+if (EXISTS "${NPDIVS_CMAKE_DIR}/CMakeCache.txt")
+    # in build tree
+    include("${NPDIVS_CMAKE_DIR}/NPDivsBuildTreeSettings.cmake")
+else()
+    set(NPDIVS_INCLUDE_DIRS
+        "${NPDIVS_CMAKE_DIR}/@CONF_REL_INCLUDE_DIR@"
+        @FLANN_INCLUDE_DIRS@
+        @Boost_INCLUDE_DIRS@
+    )
+    set(NPDIVS_LIBRARY_DIRS
+        "${NPDIVS_CMAKE_DIR}/@CONF_REL_LIB_DIR@"
+        @FLANN_LIBRARY_DIRS@
+        @Boost_LIBRARY_DIRS@
+    )
+endif()
+
+# library dependencies
+include("${NPDIVS_CMAKE_DIR}/NPDivsLibraryDepends.cmake")
+
+set(NPDIVS_LIBRARIES np-divs)
+set(NPDIVS_EXECUTABLE npdivs)
