@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -75,6 +76,9 @@ double DivL2::operator()(const vector<float> &rho_x,
     /* Estimates L2 divergence \sqrt \int (p-q)^2 between distribution X and Y,
      * based on kth-nearest-neighbor statistics.
      */
+    if (k <= 1) {
+        throw domain_error("l2 divergence estimator needs k >= 2");
+    }
     const double c = (k-1) / pow(M_PI, .5 * dim) * gamma(dim/2.0 + 1);
 
     int N = rho_x.size();
