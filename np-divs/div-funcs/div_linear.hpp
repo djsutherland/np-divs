@@ -28,86 +28,47 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#include "np-divs/div-funcs/div_alpha.hpp"
+#ifndef NPDIVS_DIV_LINEAR_HPP_
+#define NPDIVS_DIV_LINEAR_HPP_
+#include "np-divs/basics.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <functional>
-#include <numeric>
-#include <stdexcept>
+#include <boost/format.hpp>
+#include <string>
 #include <vector>
 
-#include <boost/bind.hpp>
-
-#include "np-divs/fix_terms.hpp"
-#include "np-divs/gamma.hpp"
+#include "np-divs/div-funcs/div_func.hpp"
 
 namespace NPDivs {
 
-using namespace std;
+class DivLinear : public DivFunc {
+    typedef DivFunc super;
 
-DivAlpha::DivAlpha(double alpha_, double ub_) : DivFunc(ub_), alpha(alpha_) {}
+    public:
+        DivLinear(double ub = .99);
 
-string DivAlpha::name() const {
-    return (boost::format("Alpha %g divergence") % alpha).str();
-}
+        virtual std::string name() const;
 
+        virtual double operator()(
+                const std::vector<float> &rho_x,
+                const std::vector<float> &nu_x,
+                int y_size,
+                int dim,
+                int k
+            ) const;
 
-double DivAlpha::operator()(const vector<float> &rho_x,
-                            const vector<float> &nu_x,
-                            const vector<float> &rho_y,
-                            const vector<float> &nu_y,
-                            int dim,
-                            int k) const {
-    /* Estimates alpha-divergence \int p^\alpha q^(1-\alpha) based on
-     * kth-nearest-neighbor statistics.
-     *
-     * Note that rho_y is used only for its .size(), and nu_y is not used at
-     * all. (They're there to be consistent with the DivFunc interface.)
-     */
+        virtual double operator()(
+                const std::vector<float> &rho_x,
+                const std::vector<float> &nu_x,
+                const std::vector<float> &rho_y,
+                const std::vector<float> &nu_y,
+                int dim,
+                int k
+            ) const;
 
-    return (*this)(rho_x, nu_x, rho_y.size(), dim, k);
-}
-
-double DivAlpha::operator()(const vector<float> &rho,
-                            const vector<float> &nu,
-                            int m,
-                            int dim,
-                            int k) const {
-    /* Estimates alpha-divergence \int p^\alpha q^(1-\alpha) based on
-     * kth-nearest-neighbor statistics.
-     *
-     * m is the number of sample points in the Y distribution (the one
-     * that nu is computed relative to).
-     */
-    using boost::bind;
-
-    size_t n = rho.size();
-
-    // r = rho_x ./ nu_x
-    vector<float> r;
-    r.resize(n);
-    transform(rho.begin(), rho.end(), nu.begin(), r.begin(),
-            divides<float>());
-    
-    // cap anything too big
-    fix_terms(r);
-
-    // r = r .^ (dim * (1-alpha))
-    transform(r.begin(), r.end(), r.begin(),
-            bind<double, double(&)(double,double)>(pow, _1, dim*(1-alpha)));
-
-    // find the mean of r and multiply by the appropriate constant
-    return accumulate(r.begin(), r.end(), 0.) / n *
-           exp(lgamma(k)*2 - lgamma(k+1-alpha) - lgamma(k+alpha-1)) *
-           pow((n-1.0) / m, 1.-alpha);
-    // FIXME: what about the c-bar term?
-}
-
-double DivAlpha::get_alpha() const { return alpha; }
-
-DivAlpha* DivAlpha::do_clone() const {
-    return new DivAlpha(alpha, ub);
-}
+    private:
+        virtual DivLinear* do_clone() const;
+};
 
 }
+
+#endif
