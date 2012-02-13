@@ -36,7 +36,7 @@
 #include <string>
 #include <vector>
 
-namespace NPDivs {
+namespace npdivs {
 
 class DivFunc : boost::noncopyable {
     protected:

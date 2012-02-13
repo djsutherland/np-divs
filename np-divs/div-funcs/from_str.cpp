@@ -55,7 +55,7 @@ using std::vector;
 using boost::algorithm::split;
 using boost::format;
 
-namespace NPDivs {
+namespace npdivs {
 
 DivFunc* div_func_from_str(string spec) {
     vector<string> tokens;

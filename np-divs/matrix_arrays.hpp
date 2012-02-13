@@ -36,7 +36,7 @@
 
 #include <flann/util/matrix.h>
 
-namespace NPDivs {
+namespace npdivs {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper functions for allocating/freeing matrix arrays

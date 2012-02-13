@@ -30,7 +30,7 @@
  ******************************************************************************/
 #include "np-divs/np_divs.hpp"
 
-namespace NPDivs{
+namespace npdivs{
 
 // explicit instantiations for np_divs() overloads with doubles
 

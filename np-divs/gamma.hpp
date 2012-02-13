@@ -32,7 +32,7 @@
 #define NPDIVS_GAMMA_HPP_
 #include "np-divs/basics.hpp"
 
-namespace NPDivs {
+namespace npdivs {
 
 double gamma(double x);
 

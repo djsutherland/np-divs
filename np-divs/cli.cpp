@@ -44,7 +44,7 @@
 
 #include <flann/util/matrix.h>
 
-using namespace NPDivs;
+using namespace npdivs;
 using namespace std;
 using namespace boost;
 namespace po = boost::program_options;

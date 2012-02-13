@@ -36,7 +36,7 @@
 #include <cmath>
 #include <vector>
 
-namespace NPDivs {
+namespace npdivs {
 
 template <typename T>
 bool cmp_with_inf(T i, T j) {

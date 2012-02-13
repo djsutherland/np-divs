@@ -55,7 +55,7 @@
 #include "np-divs/dkn.hpp"
 #include "np-divs/matrix_arrays.hpp"
 
-namespace NPDivs {
+namespace npdivs {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Declarations of the main np_divs functions

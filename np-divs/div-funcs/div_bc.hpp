@@ -36,7 +36,7 @@
 
 #include "np-divs/div-funcs/div_alpha.hpp"
 
-namespace NPDivs {
+namespace npdivs {
 
 class DivBC : public DivAlpha {
     typedef DivAlpha super;

@@ -38,7 +38,7 @@
 
 #include "np-divs/div-funcs/div_func.hpp"
 
-namespace NPDivs {
+namespace npdivs {
 
 class DivAlpha : public DivFunc {
     typedef DivFunc super;

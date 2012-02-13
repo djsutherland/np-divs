@@ -35,7 +35,7 @@
 
 #include <string>
 
-namespace NPDivs{
+namespace npdivs{
 
 DivFunc* div_func_from_str(std::string spec);
 

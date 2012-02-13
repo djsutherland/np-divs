@@ -34,7 +34,7 @@
 #include <cmath>
 #include <vector>
 
-namespace NPDivs {
+namespace npdivs {
 
 DivRenyi::DivRenyi(double alpha, double ub) : super(alpha, ub) {}
 

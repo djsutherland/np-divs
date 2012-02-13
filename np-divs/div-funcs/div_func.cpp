@@ -30,7 +30,7 @@
  ******************************************************************************/
 #include "np-divs/div-funcs/div_func.hpp"
 
-namespace NPDivs {
+namespace npdivs {
 
 DivFunc::DivFunc(double ub_) : ub(ub_) { }
 

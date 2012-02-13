@@ -30,7 +30,7 @@
  ******************************************************************************/
 #include "np-divs/div-funcs/div_bc.hpp"
 
-namespace NPDivs {
+namespace npdivs {
 
 std::string DivBC::name() const {
     return "Bhattacharyya coefficient";

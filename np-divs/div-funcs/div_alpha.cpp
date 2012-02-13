@@ -42,7 +42,7 @@
 #include "np-divs/fix_terms.hpp"
 #include "np-divs/gamma.hpp"
 
-namespace NPDivs {
+namespace npdivs {
 
 using namespace std;
 

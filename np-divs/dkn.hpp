@@ -36,7 +36,7 @@
 #include <vector>
 #include <flann/flann.hpp>
 
-namespace NPDivs {
+namespace npdivs {
 
 template <typename Distance, typename ResultType>
 std::vector<ResultType> DKN(

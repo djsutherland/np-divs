@@ -33,7 +33,7 @@
 #include <cmath>
 #include <string>
 
-namespace NPDivs {
+namespace npdivs {
 
 std::string DivHellinger::name() const {
     return "Hellinger distance";

@@ -37,7 +37,7 @@
 
 #include <flann/util/matrix.h>
 
-namespace NPDivs {
+namespace npdivs {
 
 std::vector< std::vector<double> > matrix_vector_from_csv(
         std::istream &in, size_t dim = 0);

@@ -54,7 +54,7 @@
 
 using namespace boost::assign; // for vector +=
 using namespace std;
-using namespace NPDivs;
+using namespace npdivs;
 
 using flann::load_from_file;
 using flann::Index;
@@ -214,7 +214,7 @@ TEST(UtilitiesTest, FixTermsWithInfAndNan) {
 }
 
 TEST(UtilitiesTest, Gamma) {
-    using NPDivs::gamma;
+    using npdivs::gamma;
 
     // integers
     EXPECT_NEAR(gamma(1), 1, 1e-10);
@@ -238,7 +238,7 @@ TEST(UtilitiesTest, Gamma) {
 }
 
 TEST(UtilitiesTest, LogGamma) {
-    using NPDivs::lgamma;
+    using npdivs::lgamma;
 
     // integers
     EXPECT_NEAR(lgamma(1), 0, 1e-15);
@@ -303,7 +303,7 @@ TEST_F(NPDivTest, DKNTwoD) {
     Index<L2<float> > index(dataset, params.index_params);
     index.buildIndex();
 
-    vector<float> results = NPDivs::DKN(index, query, 2, params.search_params);
+    vector<float> results = npdivs::DKN(index, query, 2, params.search_params);
 
     for (size_t i = 0; i < expected.size(); i++)
         EXPECT_NEAR(results[i], expected[i], .01);

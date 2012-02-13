@@ -41,7 +41,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace NPDivs {
+namespace npdivs {
 
 using namespace std;
 

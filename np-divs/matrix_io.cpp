@@ -43,7 +43,7 @@
 
 #include <flann/util/matrix.h>
 
-namespace NPDivs {
+namespace npdivs {
 
 using boost::algorithm::trim;
 using std::atof;

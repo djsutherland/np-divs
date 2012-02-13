@@ -34,7 +34,7 @@
 
 #include <flann/flann.hpp>
 
-namespace NPDivs {
+namespace npdivs {
 
 struct DivParams {
     int k; // the k of our k-nearest-neighbor searches
