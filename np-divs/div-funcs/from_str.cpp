@@ -35,6 +35,7 @@
 #include "np-divs/div-funcs/div_bc.hpp"
 #include "np-divs/div-funcs/div_hellinger.hpp"
 #include "np-divs/div-funcs/div_l2.hpp"
+#include "np-divs/div-funcs/div_linear.hpp"
 #include "np-divs/div-funcs/div_renyi.hpp"
 
 #include <functional>
@@ -99,6 +100,13 @@ DivFunc* div_func_from_str(string spec) {
             case 2: return new DivL2(args[0]);
             case 1: return new DivL2();
             default: throw domain_error("too many arguments for DivL2");
+        }
+
+    } else if (kind == "linear") {
+        switch (num_toks) {
+            case 2: return new DivLinear(args[0]);
+            case 1: return new DivLinear();
+            default: throw domain_error("too many arguments for DivLinear");
         }
 
     } else if (kind == "renyi") {
