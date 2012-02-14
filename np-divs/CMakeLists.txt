@@ -8,6 +8,9 @@ add_library(np-divs
     matrix_io.cpp
 )
 target_link_libraries(np-divs ${FLANN_LIBRARIES} ${Boost_LIBRARIES})
+if(CMAKE_COMPILER_IS_GNUCC AND NOT(BUILD_SHARED_LIBS))
+    set_target_properties(np-divs PROPERTIES COMPILE_FLAGS -fPIC)
+endif()
 
 add_executable(npdivs cli.cpp)
 target_link_libraries(npdivs np-divs ${Boost_LIBRARIES})
