@@ -5,13 +5,11 @@ add_library(np-divs SHARED
     fix_terms.cpp
     gamma.cpp
     ${DIV_FUNCS}
+    matrix_io.cpp
 )
 target_link_libraries(np-divs ${FLANN_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(npdivs
-    cli.cpp
-    matrix_io.cpp
-)
+add_executable(npdivs cli.cpp)
 target_link_libraries(npdivs np-divs ${Boost_LIBRARIES})
 
 install(
