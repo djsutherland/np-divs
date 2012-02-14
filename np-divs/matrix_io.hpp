@@ -33,6 +33,7 @@
 #include "basics.hpp"
 
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include <flann/util/matrix.h>
@@ -45,8 +46,14 @@ std::vector< std::vector<double> > matrix_vector_from_csv(
 std::vector< std::vector< std::vector<double> > >
 matrices_vector_from_csv(std::istream &in, size_t dim = 0);
 
+std::vector< std::vector< std::vector<double> > >
+labeled_matrices_vector_from_csv(
+        std::istream &in, std::vector<std::string> *labels, size_t dim = 0);
+
 flann::Matrix<double> matrix_from_csv(std::istream &in);
 flann::Matrix<double>* matrices_from_csv(std::istream &in, size_t &n);
+flann::Matrix<double>* labeled_matrices_from_csv(
+        std::istream &in, size_t &n, std::vector<std::string> &labels);
 
 template <typename T>
 void matrix_to_csv(std::ostream &out, flann::Matrix<T> mat);

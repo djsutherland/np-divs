@@ -94,6 +94,12 @@ vector< vector<double> > matrix_vector_from_csv(istream &in, size_t dim) {
 
 vector< vector< vector<double> > >
 matrices_vector_from_csv(istream &in, size_t dim) {
+    return labeled_matrices_vector_from_csv(in, NULL, dim);
+}
+
+vector< vector< vector<double> > >
+labeled_matrices_vector_from_csv(
+        istream &in, vector<string> *labels, size_t dim) {
     /* Reads a group of matrices of doubles from CSV-style input, with each
      * matrix separated by a single blank line.
      *
@@ -102,7 +108,13 @@ matrices_vector_from_csv(istream &in, size_t dim) {
      * line is used.
      */
     vector< vector< vector<double> > > matrices;
+    string label;
     while (true) {
+        if (labels != NULL) {
+            getline(in, label);
+            trim(label);
+            labels->push_back(label);
+        }
         vector< vector<double> > m = matrix_vector_from_csv(in, dim);
         if (m.size() == 0)
             break;
@@ -120,6 +132,14 @@ Matrix<double> matrix_from_csv(istream &in) {
 
 Matrix<double>* matrices_from_csv(istream &in, size_t &n) {
     vector<vector<vector<double> > > vec = matrices_vector_from_csv(in);
+    n = vec.size();
+    return vector_to_matrix_array(vec);
+}
+
+Matrix<double>* labeled_matrices_from_csv(
+        istream &in, size_t &n, vector<string> &labels) {
+    vector<vector<vector<double> > > vec =
+        labeled_matrices_vector_from_csv(in, &labels);
     n = vec.size();
     return vector_to_matrix_array(vec);
 }
