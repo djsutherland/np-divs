@@ -5,6 +5,8 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
+option(BUILD_SHARED_LIBS "Build the libraries as shared." ON)
+
 # version info
 set(NPDIVS_MAJOR_VERSION 0)
 set(NPDIVS_MINOR_VERSION 1)

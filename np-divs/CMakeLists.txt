@@ -1,6 +1,6 @@
 file(GLOB_RECURSE DIV_FUNCS div-funcs/*.cpp)
 
-add_library(np-divs SHARED
+add_library(np-divs
     np_divs.cpp
     fix_terms.cpp
     gamma.cpp
