@@ -5,7 +5,8 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-option(BUILD_SHARED_LIBS "Build the libraries as shared." ON)
+option(EXE_LINK_SHARED
+    "Link the executable to the shared library, rather than the static." ON)
 
 # version info
 set(NPDIVS_MAJOR_VERSION 0)
@@ -60,7 +61,7 @@ add_subdirectory(test)
 ## stuff for making NPDivsConfig.cmake
 
 # add targets to build-tree export set
-export(TARGETS np-divs npdivs
+export(TARGETS np-divs np-divs_s npdivs
     FILE "${PROJECT_BINARY_DIR}/NPDivsLibraryDepends.cmake")
 
 # register package with cmake registry

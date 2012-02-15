@@ -1,22 +1,36 @@
 file(GLOB_RECURSE DIV_FUNCS div-funcs/*.cpp)
-
-add_library(np-divs
+set(LIBRARY_SOURCES
     np_divs.cpp
     fix_terms.cpp
     gamma.cpp
     ${DIV_FUNCS}
     matrix_io.cpp
 )
-target_link_libraries(np-divs ${FLANN_LIBRARIES} ${Boost_LIBRARIES})
-if(CMAKE_COMPILER_IS_GNUCC AND NOT(BUILD_SHARED_LIBS))
+
+set(LIBS
+    ${FLANN_LIBRARIES}
+    ${Boost_THREAD_LIBRARY}
+)
+
+add_library(np-divs SHARED ${LIBRARY_SOURCES})
+target_link_libraries(np-divs ${LIBS})
+
+add_library(np-divs_s STATIC ${LIBRARY_SOURCES})
+target_link_libraries(np-divs_s ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+if(CMAKE_COMPILER_IS_GNUCC)
     set_target_properties(np-divs PROPERTIES COMPILE_FLAGS -fPIC)
 endif()
 
 add_executable(npdivs cli.cpp)
-target_link_libraries(npdivs np-divs ${Boost_LIBRARIES})
+if(EXE_LINK_SHARED)
+    target_link_libraries(npdivs np-divs ${Boost_PROGRAM_OPTIONS_LIBRARY})
+else()
+    target_link_libraries(npdivs np-divs_s
+        ${LIBS} ${CMAKE_THREAD_LIBS_INIT} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+endif()
 
 install(
-    TARGETS np-divs npdivs
+    TARGETS np-divs np-divs_s npdivs
     EXPORT NPDivsLibraryDepends
     RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
     LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT shlib
