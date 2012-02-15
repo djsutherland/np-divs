@@ -36,6 +36,8 @@ endforeach()
 
 # find packages
 
+include_directories(BEFORE ${PROJECT_SOURCE_DIR})
+
 find_package(Boost COMPONENTS thread program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
@@ -47,8 +49,6 @@ link_directories(${FLANN_LIBRARY_DIRS})
 if(FLANN_CFLAGS)
     add_definitions(${FLANN_CFLAGS})
 endif(FLANN_CFLAGS)
-
-include_directories(${PROJECT_SOURCE_DIR})
 
 # add subdirectories with actual content
 add_subdirectory(np-divs)
