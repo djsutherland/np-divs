@@ -126,7 +126,7 @@ int main(int argc, char ** argv) {
     Matrix* results = alloc_matrix_array<double>(num_df, num_x, num_y);
 
     try {
-        DivParams params(opts.k, opts.index_params, opts.search_params,
+        DivParams params(opts.k, &opts.index_params, &opts.search_params,
                 opts.num_threads);
         np_divs(x_bags, num_x, y_bags, num_y, opts.div_funcs, results, params);
     } catch (std::exception e) {

@@ -271,7 +271,7 @@ class NPDivTest : public ::testing::Test {
     protected:
 
     NPDivTest() :
-        params(DivParams(3, default_index_params, default_search_params))
+        params(DivParams(3, &default_index_params, &default_search_params))
     {}
 
     virtual ~NPDivTest() {}
@@ -301,10 +301,10 @@ TEST_F(NPDivTest, DKNTwoD) {
     vector<float> expected;
     expected += 3.8511, 7.3594, 5.2820, 4.6111;
 
-    Index<L2<float> > index(dataset, params.index_params);
+    Index<L2<float> > index(dataset, *params.index_params);
     index.buildIndex();
 
-    vector<float> results = npdivs::DKN(index, query, 2, params.search_params);
+    vector<float> results = npdivs::DKN(index, query, 2, *params.search_params);
 
     for (size_t i = 0; i < expected.size(); i++)
         EXPECT_NEAR(results[i], expected[i], .01);
@@ -429,7 +429,7 @@ class Gaussians50DTest : public NPDivDataTest {
     typedef NPDivDataTest super;
 protected:
     Gaussians50DTest() : super() {
-        params.index_params = flann::LinearIndexParams();
+        params.index_params = new flann::LinearIndexParams;
         load_bags("gaussian-50");
     }
     ~Gaussians50DTest() { free_bags(); }

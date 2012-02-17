@@ -28,57 +28,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef NPDIVS_DIV_PARAMS_HPP_
-#define NPDIVS_DIV_PARAMS_HPP_
-#include "np-divs/basics.hpp"
-
-#include <flann/flann.hpp>
+#include "np-divs/div_params.hpp"
 
 namespace npdivs {
 
-flann::IndexParams * get_default_index_params();
-flann::SearchParams * get_default_search_params();
+flann::IndexParams * get_default_index_params() {
+    return new flann::KDTreeSingleIndexParams;
+}
 
-struct DivParams {
-private:
-    bool free_params;
-
-public:
-    int k; // the k of our k-nearest-neighbor searches
-    flann::IndexParams *index_params;
-    flann::SearchParams *search_params;
-    size_t num_threads; // 0 means boost::thread::hardware_concurrency()
-
-    DivParams(int k = 3, size_t num_threads = 0)
-    :
-        free_params(true),
-        k(k),
-        num_threads(num_threads)
-    {
-        index_params = get_default_index_params();
-        search_params = get_default_search_params();
-    }
-
-    DivParams(
-        int k,
-        flann::IndexParams *index_params,
-        flann::SearchParams *search_params,
-        size_t num_threads = 0)
-    :
-        free_params(false),
-        k(k),
-        index_params(index_params),
-        search_params(search_params),
-        num_threads(num_threads)
-    { }
-
-    ~DivParams() {
-        if (free_params) {
-            delete index_params;
-            delete search_params;
-        }
-    }
-};
+flann::SearchParams * get_default_search_params() {
+    return new flann::SearchParams(-1);
+}
 
 }
-#endif

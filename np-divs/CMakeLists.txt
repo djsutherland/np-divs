@@ -1,10 +1,11 @@
 file(GLOB_RECURSE DIV_FUNCS div-funcs/*.cpp)
 set(LIBRARY_SOURCES
-    np_divs.cpp
+    ${DIV_FUNCS}
+    div_params.cpp
     fix_terms.cpp
     gamma.cpp
-    ${DIV_FUNCS}
     matrix_io.cpp
+    np_divs.cpp
 )
 
 set(LIBS

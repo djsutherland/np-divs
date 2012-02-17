@@ -353,11 +353,11 @@ void np_divs(
 
     // build kd-trees or whatever
     Index** indices = make_indices<Distance>(
-            bags, num_bags, params.index_params);
+            bags, num_bags, *params.index_params);
 
     // do nearest-neighbor searches for each bag to itself
-    const vector<DistVec> &rhos =
-        get_rhos(bags, indices, num_bags, k, params.search_params, num_threads);
+    const vector<DistVec> &rhos = get_rhos(
+            bags, indices, num_bags, k, *params.search_params, num_threads);
 
     // this queue will tell threads what to do
     std::queue<std::pair<size_t, size_t> > jobs;
@@ -370,7 +370,7 @@ void np_divs(
     // compute away!
     if (num_threads == 1) {
         divcalc_samebags_worker<Distance> worker(
-                bags, indices, rhos, div_funcs, k, dim, params.search_params,
+                bags, indices, rhos, div_funcs, k, dim, *params.search_params,
                 results, jobs_mutex, jobs
         );
 
@@ -393,7 +393,7 @@ void np_divs(
         for (size_t i = 0; i < num_threads; i++) {
             // create the worker
             workers.push_back(new divcalc_samebags_worker<Distance>(
-                bags, indices, rhos, div_funcs, k, dim, params.search_params,
+                bags, indices, rhos, div_funcs, k, dim, *params.search_params,
                 results, jobs_mutex, jobs
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
@@ -488,14 +488,14 @@ void np_divs(
         verify_allocated(results, num_dfs, num_x, num_y);
 
     // build kd trees or whatever
-    Index** x_indices = make_indices<Distance>(x_bags, num_x, ps.index_params);
-    Index** y_indices = make_indices<Distance>(y_bags, num_y, ps.index_params);
+    Index** x_indices = make_indices<Distance>(x_bags, num_x, *ps.index_params);
+    Index** y_indices = make_indices<Distance>(y_bags, num_y, *ps.index_params);
 
     // do nearest-neighbor searches for each bag to itself
-    const vector<DistVec> &x_rhos =
-           get_rhos(x_bags, x_indices, num_x, k, ps.search_params, num_threads);
-    const vector<DistVec> &y_rhos =
-           get_rhos(y_bags, y_indices, num_y, k, ps.search_params, num_threads);
+    const vector<DistVec> &x_rhos = get_rhos(
+            x_bags, x_indices, num_x, k, *ps.search_params, num_threads);
+    const vector<DistVec> &y_rhos = get_rhos(
+            y_bags, y_indices, num_y, k, *ps.search_params, num_threads);
 
     // compute the divergences!
     //
@@ -512,7 +512,7 @@ void np_divs(
     if (num_threads <= 1) {
         divcalc_diffbags_worker<Distance> worker(
             x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-            div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs
+            div_funcs, k, dim, *ps.search_params, results, jobs_mutex, jobs
         );
 
         // forget the queue and lock, just do_job directly
@@ -536,7 +536,7 @@ void np_divs(
             // create the worker
             workers.push_back(new divcalc_diffbags_worker<Distance>(
                 x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-                div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs
+                div_funcs, k, dim, *ps.search_params, results, jobs_mutex, jobs
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
@@ -586,8 +586,10 @@ void divcalc_samebags_worker<Distance>::do_job(size_t i, size_t j) {
         Index         &x_index = *indices[i], &y_index = *indices[j]; 
         const DistVec &rho_x = rhos[i],       &rho_y = rhos[j];
 
-        const DistVec &nu_x = DKN<Distance, float>(y_index, x_bag, k, search_params);
-        const DistVec &nu_y = DKN<Distance, float>(x_index, y_bag, k, search_params);
+        const DistVec &nu_x = DKN<Distance, float>(
+                y_index, x_bag, k, search_params);
+        const DistVec &nu_y = DKN<Distance, float>(
+                x_index, y_bag, k, search_params);
 
         for (size_t df = 0; df < num_dfs; df++) {
             const DivFunc &div_func = div_funcs[df];
