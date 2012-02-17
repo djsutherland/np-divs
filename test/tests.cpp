@@ -264,13 +264,14 @@ TEST(UtilitiesTest, LogGamma) {
     EXPECT_NEAR(lgamma(62314.156), 625626.0295132722, 5e-8);
 }
 
+flann::KDTreeSingleIndexParams default_index_params;
+SearchParams default_search_params(flann::FLANN_CHECKS_UNLIMITED);
 
 class NPDivTest : public ::testing::Test {
     protected:
 
     NPDivTest() :
-        params(DivParams(3, flann::KDTreeSingleIndexParams(),
-                            SearchParams(flann::FLANN_CHECKS_UNLIMITED)))
+        params(DivParams(3, default_index_params, default_search_params))
     {}
 
     virtual ~NPDivTest() {}

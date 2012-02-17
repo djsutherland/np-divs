@@ -36,16 +36,19 @@
 
 namespace npdivs {
 
+flann::KDTreeSingleIndexParams default_index_params;
+flann::SearchParams default_search_params(-1);
+
 struct DivParams {
     int k; // the k of our k-nearest-neighbor searches
-    flann::IndexParams index_params;
-    flann::SearchParams search_params;
+    flann::IndexParams &index_params;
+    flann::SearchParams &search_params;
     size_t num_threads; // 0 means boost::thread::hardware_concurrency()
 
     DivParams(
         int k = 3,
-        flann::IndexParams index_params = flann::KDTreeSingleIndexParams(),
-        flann::SearchParams search_params = flann::SearchParams(-1),
+        flann::IndexParams &index_params = default_index_params,
+        flann::SearchParams &search_params = default_search_params,
         size_t num_threads = 0)
     :
         k(k), index_params(index_params), search_params(search_params),
