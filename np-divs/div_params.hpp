@@ -73,10 +73,11 @@ public:
     { }
 
     ~DivParams() {
-        if (free_params) {
-            delete index_params;
-            delete search_params;
-        }
+        // FIXME: memory leak, but this is segfaulting in certain cases...
+        // if (free_params) {
+        //     delete index_params;
+        //     delete search_params;
+        // }
     }
 };
 
