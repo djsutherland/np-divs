@@ -15,13 +15,16 @@ function [Ds] = NPDivs(x_bags, y_bags, div_funcs, options)
 %         values above the 95th percentile are cut down; 1 means not to 
 %         do this; default is .99.
 %   options: a struct array with the following possible members:
-%         cmd_name: the name of the program to call; use if npdivs isn't
-%              on your PATH.
+%         cmd_name: the name of the program to call.
+%              use if npdivs isn't on your PATH.
 %         k: the k for k-nearest-neighbor. Default 3.
 %         index: the nearest-neighbor index to use. Options include linear,
-%              kdtree. Default is kdtree.
+%              kdtree. Default is kdtree. Use linear for high-dimensional,
+%              relatively sparse data.
 %         num_threads: the number of threads to use in calculation. 0 (the
 %              default) means one per core.
+%         resultsfile: the file to save results into.
+%              default is a temporary file, which will be deleted.
 %
 % Returns:
 %   Ds: an array of divergence estimates. Ds(i, j, n) is div(x_i, y_j) for
@@ -59,7 +62,19 @@ if do_y
 end
 
 % build up our argument string
-resultsfile = tempname();
+threads = getopt(options, 'num_threads', 0);
+if threads == 0;
+    threads = feature('numCores'); % works even if boost is ancient
+end
+
+if isfield(options, 'resultsfile')
+    del_results = false;
+    resultsfile = options.resultsfile;
+else
+    del_results = true;
+    resultsfile = tempname();
+end
+
 cmd = [getopt(options, 'cmd_name', 'npdivs') ...
     sprintf(' --num-threads=%d', getopt(options, 'num_threads', 0)) ...
     sprintf(' -k%d', getopt(options, 'k', 3)) ...
@@ -86,7 +101,9 @@ end
 Ds = readresult(resultsfile);
 
 % clean up our temp files
-delete(xfile, resultsfile); if do_y; delete(yfile); end
+delete(xfile);
+if del_results; delete(resultsfile); end
+if do_y; delete(yfile); end
 
 end
 
