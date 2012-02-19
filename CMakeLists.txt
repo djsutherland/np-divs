@@ -56,6 +56,7 @@ endif(FLANN_CFLAGS)
 # add subdirectories with actual content
 add_subdirectory(np-divs)
 add_subdirectory(test)
+add_subdirectory(wrappers)
 
 ################################################################################
 ## stuff for making NPDivsConfig.cmake
