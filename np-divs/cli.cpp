@@ -88,60 +88,61 @@ bool parse_args(int argc, char ** argv, ProgOpts& opts);
 int main(int argc, char ** argv) {
     typedef flann::Matrix<double> Matrix;
 
-    ProgOpts opts;
-    opts.search_params = flann::SearchParams(64);
-    if (!parse_args(argc, argv, opts))
-        return 1;
-
-    size_t num_df = opts.div_funcs.size();
-    if (num_df == 0) {
-        cerr << "Error: at least one div func is required\n";
-        return 1;
-    }
-
-    // load input bags
-    // TODO - gracefully handle nonexisting files
-    size_t num_x;
-    Matrix* x_bags;
-    if (opts.x_bags_file == "-") {
-        x_bags = matrices_from_csv(cin, num_x);
-    } else {
-        ifstream ifs(opts.x_bags_file.c_str(), ifstream::in);
-        x_bags = matrices_from_csv(ifs, num_x);
-    }
-
-    size_t num_y;
-    Matrix* y_bags;
-    if (opts.y_bags_file.empty()) {
-        y_bags = NULL;
-        num_y = num_x;
-    } else if (opts.y_bags_file == "-") {
-        y_bags = matrices_from_csv(cin, num_y);
-    } else {
-        ifstream ifs(opts.y_bags_file.c_str(), ifstream::in);
-        y_bags = matrices_from_csv(ifs, num_y);
-    }
-
-
-    Matrix* results = alloc_matrix_array<double>(num_df, num_x, num_y);
-
     try {
+        ProgOpts opts;
+        opts.search_params = flann::SearchParams(64);
+        if (!parse_args(argc, argv, opts))
+            return 1;
+
+        size_t num_df = opts.div_funcs.size();
+        if (num_df == 0) {
+            cerr << "Error: at least one div func is required\n";
+            return 1;
+        }
+
+        // load input bags
+        // TODO - gracefully handle nonexisting files
+        size_t num_x;
+        Matrix* x_bags;
+        if (opts.x_bags_file == "-") {
+            x_bags = matrices_from_csv(cin, num_x);
+        } else {
+            ifstream ifs(opts.x_bags_file.c_str(), ifstream::in);
+            x_bags = matrices_from_csv(ifs, num_x);
+        }
+
+        size_t num_y;
+        Matrix* y_bags;
+        if (opts.y_bags_file.empty()) {
+            y_bags = NULL;
+            num_y = num_x;
+        } else if (opts.y_bags_file == "-") {
+            y_bags = matrices_from_csv(cin, num_y);
+        } else {
+            ifstream ifs(opts.y_bags_file.c_str(), ifstream::in);
+            y_bags = matrices_from_csv(ifs, num_y);
+        }
+
+
+        Matrix* results = alloc_matrix_array<double>(num_df, num_x, num_y);
+
         DivParams params(opts.k, opts.index_params, opts.search_params,
                 opts.num_threads);
         np_divs(x_bags, num_x, y_bags, num_y, opts.div_funcs, results, params);
-    } catch (std::exception e) {
+
+        if (opts.results_file == "-") {
+            matrix_array_to_csv(cout, results, num_df);
+        } else {
+            ofstream ofs(opts.results_file.c_str());
+            matrix_array_to_csv(ofs, results, num_df);
+        }
+
+        free_matrix_array(results, num_df);
+
+    } catch (std::exception &e) {
         cerr << "Error: " << e.what() << endl;
         exit(1);
     }
-
-    if (opts.results_file == "-") {
-        matrix_array_to_csv(cout, results, num_df);
-    } else {
-        ofstream ofs(opts.results_file.c_str());
-        matrix_array_to_csv(ofs, results, num_df);
-    }
-
-    free_matrix_array(results, num_df);
 
     return 0;
 }

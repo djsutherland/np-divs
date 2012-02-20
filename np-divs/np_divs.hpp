@@ -41,9 +41,11 @@
 #include <utility>
 #include <vector>
 
+#include <boost/exception_ptr.hpp>
 #include <boost/format.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/thread.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/utility.hpp>
 #include <boost/version.hpp>
 
@@ -177,6 +179,8 @@ class divcalc_worker : boost::noncopyable {
     boost::mutex &jobs_mutex;
     std::queue<size_pair> &jobs;
 
+    boost::exception_ptr &error;
+
     public:
 
     divcalc_worker(
@@ -186,11 +190,12 @@ class divcalc_worker : boost::noncopyable {
             const flann::SearchParams &search_params,
             flann::Matrix<double> *results,
             boost::mutex &jobs_mutex,
-            std::queue<size_pair> &jobs)
+            std::queue<size_pair> &jobs,
+            boost::exception_ptr &error)
         :
             k(k), dim(dim), div_funcs(div_funcs), num_dfs(div_funcs.size()),
             search_params(search_params), results(results),
-            jobs_mutex(jobs_mutex), jobs(jobs)
+            jobs_mutex(jobs_mutex), jobs(jobs), error(error)
         { }
 
     virtual ~divcalc_worker() {};
@@ -237,9 +242,11 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
             int k, int dim,
             const flann::SearchParams &search_params,
             flann::Matrix<double> *results,
-            boost::mutex &jobs_mutex, std::queue<size_pair> &jobs)
+            boost::mutex &jobs_mutex, std::queue<size_pair> &jobs,
+            boost::exception_ptr &error)
         :
-            super(k, dim, div_funcs, search_params, results, jobs_mutex, jobs),
+            super(k, dim, div_funcs, search_params,
+                    results, jobs_mutex, jobs, error),
             bags(bags), indices(indices), rhos(rhos)
         { }
 
@@ -280,9 +287,11 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
             int k, int dim,
             const flann::SearchParams &search_params,
             flann::Matrix<double> *results,
-            boost::mutex &jobs_mutex, std::queue<size_pair> &jobs)
+            boost::mutex &jobs_mutex, std::queue<size_pair> &jobs,
+            boost::exception_ptr &error)
         :
-            super(k, dim, div_funcs, search_params, results, jobs_mutex, jobs),
+            super(k, dim, div_funcs, search_params,
+                    results, jobs_mutex, jobs, error),
             x_bags(x_bags), y_bags(y_bags),
             x_indices(x_indices), y_indices(y_indices),
             x_rhos(x_rhos), y_rhos(y_rhos)
@@ -348,7 +357,7 @@ void np_divs(
 
     int k = params.k;
     if (k < 1)
-        throw std::domain_error("np_divs: k < 1 is nonsensical");
+        BOOST_THROW_EXCEPTION(std::domain_error("np_divs: k<1 is nonsensical"));
     size_t num_threads = get_num_threads(params.num_threads);
 
     // build kd-trees or whatever
@@ -369,9 +378,10 @@ void np_divs(
 
     // compute away!
     if (num_threads == 1) {
+        boost::exception_ptr error;
         divcalc_samebags_worker<Distance> worker(
                 bags, indices, rhos, div_funcs, k, dim, params.search_params,
-                results, jobs_mutex, jobs
+                results, jobs_mutex, jobs, error
         );
 
         // ignore the queue, just use do_job directly
@@ -388,17 +398,22 @@ void np_divs(
         // we keep the worker objects in this ptr_vector so
         // that they don't get copied but also have the correct lifetime
         boost::ptr_vector<divcalc_samebags_worker<Distance> > workers;
+        std::vector<boost::exception_ptr> errors(num_threads);
         boost::thread_group worker_threads;
 
         for (size_t i = 0; i < num_threads; i++) {
             // create the worker
             workers.push_back(new divcalc_samebags_worker<Distance>(
                 bags, indices, rhos, div_funcs, k, dim, params.search_params,
-                results, jobs_mutex, jobs
+                results, jobs_mutex, jobs, errors[i]
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
+
         worker_threads.join_all();
+        for (size_t i = 0; i < num_threads; i++)
+            if (errors[i])
+                boost::rethrow_exception(errors[i]);
     }
 
     free_indices(indices, num_bags);
@@ -481,7 +496,7 @@ void np_divs(
 
     int k = ps.k;
     if (k < 1)
-        throw std::domain_error("np_divs: k < 1 is nonsensical");
+        BOOST_THROW_EXCEPTION(std::domain_error("np_divs: k<1 is nonsensical"));
     size_t num_threads = get_num_threads(ps.num_threads);
 
     if (ver_alloc)
@@ -510,9 +525,11 @@ void np_divs(
     boost::mutex jobs_mutex;
 
     if (num_threads <= 1) {
+        boost::exception_ptr error;
         divcalc_diffbags_worker<Distance> worker(
             x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-            div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs
+            div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs,
+            error
         );
 
         // forget the queue and lock, just do_job directly
@@ -530,18 +547,23 @@ void np_divs(
         // we keep the worker objects in this ptr_vector so
         // that they don't get copied but also have the correct lifetime
         boost::ptr_vector<divcalc_diffbags_worker<Distance> > workers;
+        std::vector<boost::exception_ptr> errors(num_threads);
         boost::thread_group worker_threads;
 
         for (size_t i = 0; i < num_threads; i++) {
             // create the worker
             workers.push_back(new divcalc_diffbags_worker<Distance>(
                 x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-                div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs
+                div_funcs, k, dim, ps.search_params, results, jobs_mutex, jobs,
+                errors[i]
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
 
         worker_threads.join_all();
+        for (size_t i = 0; i < num_threads; i++)
+            if (errors[i])
+                boost::rethrow_exception(errors[i]);
     }
 
     free_indices(x_indices, num_x);
@@ -554,18 +576,29 @@ void np_divs(
 template <typename Distance>
 void divcalc_worker<Distance>::operator()() {
     size_pair job;
-    while (true) {
-        { // lock applies only in this scope
-            boost::mutex::scoped_lock the_lock(jobs_mutex);
+    try {
+        while (true) {
+            { // lock applies only in this scope
+                boost::mutex::scoped_lock the_lock(jobs_mutex);
 
-            if (jobs.size() == 0)
-                return;
+                if (jobs.size() == 0)
+                    return;
 
-            job = jobs.front();
-            jobs.pop();
+                job = jobs.front();
+                jobs.pop();
+            }
+
+            this->do_job(job.first, job.second);
         }
+        error = boost::exception_ptr();
+    } catch (...) {
+        error = boost::current_exception();
 
-        this->do_job(job.first, job.second);
+        {   // clear jobs so other threads know to abort
+            boost::mutex::scoped_lock the_lock(jobs_mutex);
+            while (!jobs.empty())
+                jobs.pop();
+        }
     }
 }
 
@@ -586,8 +619,10 @@ void divcalc_samebags_worker<Distance>::do_job(size_t i, size_t j) {
         Index         &x_index = *indices[i], &y_index = *indices[j]; 
         const DistVec &rho_x = rhos[i],       &rho_y = rhos[j];
 
-        const DistVec &nu_x = DKN<Distance, float>(y_index, x_bag, k, search_params);
-        const DistVec &nu_y = DKN<Distance, float>(x_index, y_bag, k, search_params);
+        const DistVec &nu_x =
+            DKN<Distance, float>(y_index, x_bag, k, search_params);
+        const DistVec &nu_y =
+            DKN<Distance, float>(x_index, y_bag, k, search_params);
 
         for (size_t df = 0; df < num_dfs; df++) {
             const DivFunc &div_func = div_funcs[df];
@@ -604,8 +639,8 @@ void divcalc_diffbags_worker<Distance>::do_job(size_t i, size_t j) {
     const DistVec &rho_x = x_rhos[i],        &rho_y = y_rhos[j];
 
     // compute away
-    const DistVec &nu_x = DKN<Distance, float>(y_index, x_bag, k, search_params);
-    const DistVec &nu_y = DKN<Distance, float>(x_index, y_bag, k, search_params);
+    const DistVec &nu_x = DKN<Distance,float>(y_index, x_bag, k, search_params);
+    const DistVec &nu_y = DKN<Distance,float>(x_index, y_bag, k, search_params);
 
     for (size_t df = 0; df < num_dfs; df++) {
         results[df][i][j] = div_funcs[df](rho_x, nu_x, rho_y, nu_y, dim, k);
@@ -636,7 +671,7 @@ void verify_allocated(
                 boost::format("expected matrix %d to be %dx%d; it's %d%d")
                 % i % rows % cols % m.rows % m.cols;
             std::cerr << err << std::endl;
-            throw std::length_error(err.str());
+            BOOST_THROW_EXCEPTION(std::length_error(err.str()));
         }
     }
 }
@@ -687,38 +722,52 @@ class rho_getter : boost::noncopyable {
     std::queue<size_t> &jobs;
     boost::mutex &jobs_mutex;
 
+    boost::exception_ptr &error;
+
     public:
     rho_getter(const Matrix *bags, Index **indices, int k,
             const flann::SearchParams &search_params,
             std::vector<DistVec> &rhos, boost::mutex &rhos_mutex,
-            std::queue<size_t> &jobs, boost::mutex &jobs_mutex)
+            std::queue<size_t> &jobs, boost::mutex &jobs_mutex,
+            boost::exception_ptr &error)
         :
             bags(bags), indices(indices), k(k), search_params(search_params),
             rhos(rhos), rhos_mutex(rhos_mutex),
-            jobs(jobs), jobs_mutex(jobs_mutex)
+            jobs(jobs), jobs_mutex(jobs_mutex),
+            error(error)
         { }
 
     void operator()(){
         size_t i;
-        while (true) {
-            // get a job
-            {
-                boost::mutex::scoped_lock the_lock(jobs_mutex);
+        try {
+            while (true) {
+                // get a job
+                {
+                    boost::mutex::scoped_lock the_lock(jobs_mutex);
 
-                if (jobs.size() == 0) return;
+                    if (jobs.size() == 0) return;
 
-                i = jobs.front();
-                jobs.pop();
+                    i = jobs.front();
+                    jobs.pop();
+                }
+
+                // compute
+                const DistVec &rho = DKN<Distance, float>(
+                        *indices[i], bags[i], k+1, search_params);
+
+                // write out results
+                {
+                    boost::mutex::scoped_lock the_lock(rhos_mutex);
+                    rhos[i] = rho;
+                }
             }
+        } catch (...) {
+            error = boost::current_exception();
 
-            // compute
-            const DistVec &rho = DKN<Distance, float>(
-                    *indices[i], bags[i], k+1, search_params);
-
-            // write out results
-            {
-                boost::mutex::scoped_lock the_lock(rhos_mutex);
-                rhos[i] = rho;
+            {   // clear jobs so other threads don't continue on
+                boost::mutex::scoped_lock the_lock(jobs_mutex);
+                while (!jobs.empty())
+                    jobs.pop();
             }
         }
     };
@@ -747,6 +796,8 @@ std::vector<std::vector<float> > get_rhos(
         rhos.resize(n);
 
         boost::ptr_vector<rho_getter<Distance> > workers;
+        std::vector<boost::exception_ptr> errors(num_threads);
+
         boost::thread_group worker_threads;
         boost::mutex rhos_mutex, jobs_mutex;
 
@@ -757,12 +808,15 @@ std::vector<std::vector<float> > get_rhos(
         for (size_t i = 0; i < num_threads; i++) {
             workers.push_back(new rho_getter<Distance>(
                         bags, indices, k, search_params,
-                        rhos, rhos_mutex, jobs, jobs_mutex
+                        rhos, rhos_mutex, jobs, jobs_mutex, errors[i]
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
 
         worker_threads.join_all();
+        for (size_t i = 0; i < num_threads; i++)
+            if (errors[i])
+                boost::rethrow_exception(errors[i]);
     }
 
     return rhos;

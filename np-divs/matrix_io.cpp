@@ -82,9 +82,9 @@ vector< vector<double> > matrix_vector_from_csv(istream &in, size_t dim) {
         if (dim == 0)
             dim = row.size();
         else if (dim != row.size())
-            throw domain_error((boost::format(
-                            "nonrectangular matrix: expected %d cols, got %d")
-                        % dim % row.size()).str());
+            BOOST_THROW_EXCEPTION(domain_error((boost::format(
+                    "nonrectangular matrix: expected %d cols, got %d")
+                            % dim % row.size()).str()));
 
         matrix.push_back(row);
     }

@@ -34,6 +34,8 @@
 
 #include <stdexcept>
 
+#include <boost/throw_exception.hpp>
+
 #include <flann/util/matrix.h>
 
 namespace npdivs {
@@ -86,12 +88,13 @@ flann::Matrix<Scalar> vector_to_matrix(std::vector<std::vector<Scalar> > vec) {
     // check dimensions
     size_t rows = vec.size();
     if (rows == 0)
-        throw std::domain_error("can't convert empty vector");
+        BOOST_THROW_EXCEPTION(std::domain_error("can't convert empty vector"));
 
     size_t cols = vec[0].size();
     for (size_t i = 0; i < rows; i++) {
         if (vec[i].size() != cols)
-            throw std::domain_error("can't make a nonrectangular matrix");
+            BOOST_THROW_EXCEPTION(std::domain_error(
+                        "can't make a nonrectangular matrix"));
     }
 
     // make the matrix
@@ -114,7 +117,7 @@ flann::Matrix<Scalar>* vector_to_matrix_array(
 
     size_t n = vec.size();
     if (n == 0)
-        throw std::domain_error("can't convert empty vector");
+        BOOST_THROW_EXCEPTION(std::domain_error("can't convert empty vector"));
 
     Matrix* array = new Matrix[n];
     size_t i;
@@ -122,7 +125,7 @@ flann::Matrix<Scalar>* vector_to_matrix_array(
         for (i = 0; i < n; i++)
             array[i] = vector_to_matrix(vec[i]);
 
-    } catch (std::domain_error e) {
+    } catch (std::domain_error &e) {
         for (size_t j = 0; j < i; j++)
             delete[] array[j].ptr();
         delete[] array;

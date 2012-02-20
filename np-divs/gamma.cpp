@@ -41,6 +41,8 @@
 #include <cmath>
 #include <stdexcept>
 
+#include <boost/throw_exception.hpp>
+
 namespace npdivs {
 
 using namespace std;
@@ -82,7 +84,8 @@ double gamma(double x)
         0.14e-14};
 
     if (x > 171.0)
-        throw domain_error("Value too large; use lgamma instead.");
+        BOOST_THROW_EXCEPTION(domain_error(
+                    "value too large for gamma; use lgamma instead"));
         
     if (x == (int) x) {
         if (x > 0.0) {
@@ -93,7 +96,8 @@ double gamma(double x)
             }
         }
         else
-            throw domain_error("Gamma not defined for nonpositive integers.");
+            BOOST_THROW_EXCEPTION(domain_error(
+                        "gamma not defined for nonpositive integers"));
 
     } else if (x > 0.0 && x - .5 == (int) x) {
         // Gamma(n+1/2) = sqrt(pi) * choose(n-1/2, n) * n!
@@ -153,7 +157,8 @@ double lgamma(double x) {
     
     x0 = x;
     if (x <= 0.0)
-        throw domain_error("lgamma() not defined for nonpositive arguments");
+        BOOST_THROW_EXCEPTION(domain_error(
+                    "lgamma() not defined for nonpositive arguments"));
 
     else if ((x == 1.0) || (x == 2.0))
         return 0.0;

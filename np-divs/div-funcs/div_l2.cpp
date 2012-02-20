@@ -37,6 +37,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/throw_exception.hpp>
+
 #include "np-divs/fix_terms.hpp"
 #include "np-divs/gamma.hpp"
 
@@ -77,10 +79,12 @@ double DivL2::operator()(const vector<float> &rho_x,
      * based on kth-nearest-neighbor statistics.
      */
     if (k <= 1) {
-        throw domain_error("l2 divergence estimator needs k >= 2");
+        BOOST_THROW_EXCEPTION(domain_error(
+                    "l2 divergence estimator needs k >= 2"));
     }
     // (k-1) / volume of unit ball: this is B_{k,a,b} for a=0,b=1 and a=1,b=0
     const double c = (k-1) / pow(M_PI, .5 * dim) * gamma(dim/2.0 + 1);
+    // XXX only works for dimensions up to 340
 
     int N = rho_x.size();
     int M = rho_y.size();

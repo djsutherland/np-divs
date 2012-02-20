@@ -45,18 +45,19 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/bind.hpp>
-#include <boost/format.hpp>
+#include <boost/throw_exception.hpp>
 
 using std::bind2nd;
-using std::domain_error;
 using std::equal_to;
 using std::string;
 using std::vector;
 
 using boost::algorithm::split;
-using boost::format;
 
 namespace npdivs {
+
+#define THROW_DOM(x)\
+    BOOST_THROW_EXCEPTION(std::domain_error(x))
 
 DivFunc* div_func_from_str(string spec) {
     vector<string> tokens;
@@ -64,7 +65,7 @@ DivFunc* div_func_from_str(string spec) {
 
     size_t num_toks = tokens.size();
     if (num_toks == 0)
-        throw domain_error("can't handle empty div func specification");
+        THROW_DOM("can't handle empty div func specification");
 
     const string &kind = tokens[0];
 
@@ -78,35 +79,35 @@ DivFunc* div_func_from_str(string spec) {
             case 3: return new DivAlpha(args[0], args[1]);
             case 2: return new DivAlpha(args[0]);
             case 1: return new DivAlpha();
-            default: throw domain_error("too many arguments for DivAlpha");
+            default: THROW_DOM("too many arguments for DivAlpha");
         }
 
     } else if (kind == "bc") {
         switch (num_toks) {
             case 2: return new DivBC(args[0]);
             case 1: return new DivBC();
-            default: throw domain_error("too many arguments for DivBC");
+            default: THROW_DOM("too many arguments for DivBC");
         }
 
     } else if (kind == "hellinger") {
         switch (num_toks) {
             case 2: return new DivHellinger(args[0]);
             case 1: return new DivHellinger();
-            default: throw domain_error("too many arguments for DivHellinger");
+            default: THROW_DOM("too many arguments for DivHellinger");
         }
 
     } else if (kind == "l2") {
         switch (num_toks) {
             case 2: return new DivL2(args[0]);
             case 1: return new DivL2();
-            default: throw domain_error("too many arguments for DivL2");
+            default: THROW_DOM("too many arguments for DivL2");
         }
 
     } else if (kind == "linear") {
         switch (num_toks) {
             case 2: return new DivLinear(args[0]);
             case 1: return new DivLinear();
-            default: throw domain_error("too many arguments for DivLinear");
+            default: THROW_DOM("too many arguments for DivLinear");
         }
 
     } else if (kind == "renyi") {
@@ -114,11 +115,11 @@ DivFunc* div_func_from_str(string spec) {
             case 3: return new DivRenyi(args[0], args[1]);
             case 2: return new DivRenyi(args[0]);
             case 1: return new DivRenyi();
-            default: throw domain_error("too many arguments for DivRenyi");
+            default: THROW_DOM("too many arguments for DivRenyi");
         }
 
     } else {
-        throw domain_error((format("unknown div func type %d") % kind).str());
+        THROW_DOM("unknown div func type " + kind);
     }
 }
 
