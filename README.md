@@ -15,7 +15,7 @@ Requirements
 ------------
 
   * [FLANN](http://people.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN)
-  * [Boost](http://boost.org) - tested back to 1.33.1, 1.35 or newer preferred
+  * [Boost](http://boost.org) - at least 1.35
   * [CMake](http://cmake.org)
   * Optional: [HDF5](http://www.hdfgroup.org/HDF5/)
 

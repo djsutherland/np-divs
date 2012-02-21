@@ -9,7 +9,7 @@ set(LIBRARY_SOURCES
 
 set(LIBS
     ${FLANN_LIBRARIES}
-    ${Boost_THREAD_LIBRARY}
+    ${BOOST_THREAD}
 )
 
 add_library(np-divs SHARED ${LIBRARY_SOURCES})
@@ -23,10 +23,10 @@ endif()
 
 add_executable(npdivs cli.cpp)
 if(EXE_LINK_SHARED)
-    target_link_libraries(npdivs np-divs ${Boost_PROGRAM_OPTIONS_LIBRARY})
+    target_link_libraries(npdivs np-divs ${BOOST_PROGRAM_OPTIONS})
 else()
     target_link_libraries(npdivs np-divs_s
-        ${LIBS} ${CMAKE_THREAD_LIBS_INIT} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+        ${LIBS} ${CMAKE_THREAD_LIBS_INIT} ${BOOST_PROGRAM_OPTIONS})
 endif()
 
 install(

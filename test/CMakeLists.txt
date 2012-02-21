@@ -12,7 +12,7 @@ target_link_libraries(np-divs_tests
     gtest
     ${HDF5_LIBRARIES}
     ${FLANN_LIBRARIES}
-    ${Boost_LIBRARIES}
+    ${BOOST_THREAD}
 )
 
 configure_file(test_dists.hdf5 test_dists.hdf5 COPYONLY)

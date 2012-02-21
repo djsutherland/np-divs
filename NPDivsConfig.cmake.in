@@ -13,13 +13,13 @@ else()
     set(NPDIVS_INCLUDE_DIRS
         "${NPDIVS_CMAKE_DIR}/@CONF_REL_INCLUDE_DIR@"
         @FLANN_INCLUDE_DIRS@
-        @Boost_INCLUDE_DIRS@
+        @BOOST_HEADERS@
     )
     set(NPDIVS_LIBRARY_DIRS
         "${NPDIVS_CMAKE_DIR}/@CONF_REL_LIB_DIR@"
         @FLANN_LIBRARY_DIRS@
-        @Boost_LIBRARY_DIRS@
     )
+# TODO: export boost libraries?
 endif()
 
 # library dependencies
