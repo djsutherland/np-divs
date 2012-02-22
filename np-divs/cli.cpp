@@ -109,6 +109,7 @@ int main(int argc, char ** argv) {
         } else {
             ifstream ifs(opts.x_bags_file.c_str(), ifstream::in);
             x_bags = matrices_from_csv(ifs, num_x);
+            cerr << "Read " << num_x << " x bags.\n";
         }
 
         size_t num_y;
@@ -121,6 +122,7 @@ int main(int argc, char ** argv) {
         } else {
             ifstream ifs(opts.y_bags_file.c_str(), ifstream::in);
             y_bags = matrices_from_csv(ifs, num_y);
+            cerr << "Read " << num_x << " y bags.\n";
         }
 
 
