@@ -89,10 +89,10 @@ double DivLinear::operator()(const vector<float> &rho,
             boost::bind<double, double(&)(double,double)>(pow, _1, -1.*dim));
 
     // cap anything too big
-    fix_terms(r);
+    fix_terms(r, ub);
 
     // find the mean of r and multiply by the appropriate constant
-    return accumulate(r.begin(), r.end(), 0.) / n
+    return accumulate(r.begin(), r.end(), 0.0) / ((double) n)
            * (k-1.) // gamma(k)^2 / gamma(k-0) / gamma(k-1)
            / pow(M_PI, .5 * dim) * gamma(dim/2.0 + 1) // vol. of unit ball
            / ((double) m);

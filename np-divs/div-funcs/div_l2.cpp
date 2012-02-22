@@ -103,10 +103,10 @@ double DivL2::operator()(const vector<float> &rho_x,
     double res;
     if (N != M) {
         // throw away anything too big
-        fix_terms(pp);
-        fix_terms(qp);
-        fix_terms(pq);
-        fix_terms(qq);
+        fix_terms(pp, ub);
+        fix_terms(qp, ub);
+        fix_terms(pq, ub);
+        fix_terms(qq, ub);
 
         // combine terms
         res = mean(pp) - mean(qp) - mean(pq) + mean(qq);
@@ -118,7 +118,7 @@ double DivL2::operator()(const vector<float> &rho_x,
             pp[i] += qq[i] - pq[i] - qp[i];
         }
 
-        fix_terms(pp);
+        fix_terms(pp, ub);
         res = mean(pp);
     };
     return res > 0 ? sqrt(res) : 0.;

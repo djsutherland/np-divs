@@ -91,7 +91,7 @@ double DivAlpha::operator()(const vector<float> &rho,
             divides<float>());
     
     // cap anything too big
-    fix_terms(r);
+    fix_terms(r, ub);
 
     // r = r .^ (dim * (1-alpha))
     transform(r.begin(), r.end(), r.begin(),
