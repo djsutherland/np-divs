@@ -367,6 +367,7 @@ void np_divs(
     // do nearest-neighbor searches for each bag to itself
     const vector<DistVec> &rhos =
         get_rhos(bags, indices, num_bags, k, params.search_params, num_threads);
+    std::cerr << "Done calculating rhos\n";
 
     // this queue will tell threads what to do
     std::queue<std::pair<size_t, size_t> > jobs;
@@ -511,6 +512,7 @@ void np_divs(
            get_rhos(x_bags, x_indices, num_x, k, ps.search_params, num_threads);
     const vector<DistVec> &y_rhos =
            get_rhos(y_bags, y_indices, num_y, k, ps.search_params, num_threads);
+    std::cerr << "Done calculating rhos\n";
 
     // compute the divergences!
     //
@@ -581,8 +583,12 @@ void divcalc_worker<Distance>::operator()() {
             { // lock applies only in this scope
                 boost::mutex::scoped_lock the_lock(jobs_mutex);
 
-                if (jobs.size() == 0)
+                size_t sz = jobs.size();
+                if (sz == 0)
                     return;
+
+                if (sz % 1000 == 0)
+                    std::cerr << sz << " pairs left to compute\n";
 
                 job = jobs.front();
                 jobs.pop();
