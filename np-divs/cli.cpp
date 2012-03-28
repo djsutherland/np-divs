@@ -38,6 +38,7 @@
 #include <string>
 
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/utility.hpp>
@@ -130,7 +131,13 @@ int main(int argc, char ** argv) {
 
         DivParams params(opts.k, opts.index_params, opts.search_params,
                 opts.num_threads);
+
+        boost::posix_time::ptime t_start = boost::posix_time::second_clock::local_time();
+
         np_divs(x_bags, num_x, y_bags, num_y, opts.div_funcs, results, params);
+
+        boost::posix_time::ptime t_end = boost::posix_time::second_clock::local_time();
+        cout << "Computation took " << (t_end - t_start).total_seconds() << " seconds.\n";
 
         if (opts.results_file == "-") {
             matrix_array_to_csv(cout, results, num_df);
