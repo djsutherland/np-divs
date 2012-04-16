@@ -28,9 +28,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE  *
  * POSSIBILITY OF SUCH DAMAGE.                                                 *
  ******************************************************************************/
-#ifndef NPDIVS_DIV_PARAMS_HPP_
-#define NPDIVS_DIV_PARAMS_HPP_
-#include "np-divs/basics.hpp"
 #include "np-divs/div_params.hpp"
 
 #include <stdexcept>
@@ -55,4 +52,3 @@ flann::IndexParams index_params_from_str(const std::string &spec) {
 }
 
 }
-#endif
