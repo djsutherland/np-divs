@@ -323,27 +323,16 @@ struct DivOptions {
             show_progress = get_bool(val, "show_progress must be a boolean");
 
         } else {
-            mexErrMsgTxt(("unknown training option: " + name).c_str());
-        }
-    }
-
-    // even though this looks like object slicing, it's not, i promise
-    flann::IndexParams getIndexParams() const {
-        if (index_type == "linear" || index_type == "brute") {
-            flann::LinearIndexParams ps;
-            return ps;
-        } else if (index_type == "kdtree" || index_type == "kd") {
-            flann::KDTreeSingleIndexParams ps;
-            return ps;
-        } else {
-            mexErrMsgTxt(("unknown index type: " + index_type).c_str());
+            mexErrMsgTxt(("unknown divs option: " + name).c_str());
         }
     }
 
     DivParams getDivParams() const {
         flann::SearchParams search_params(-1);
-        return DivParams(k, getIndexParams(), search_params,
-                         num_threads, show_progress);
+        return DivParams(k,
+                npdivs::index_params_from_str(index_type),
+                search_params,
+                num_threads, show_progress);
     }
 };
 

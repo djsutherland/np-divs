@@ -59,7 +59,7 @@ namespace npdivs {
 #define THROW_DOM(x)\
     BOOST_THROW_EXCEPTION(std::domain_error(x))
 
-DivFunc* div_func_from_str(string spec) {
+DivFunc* div_func_from_str(const string &spec) {
     vector<string> tokens;
     split(tokens, spec, bind2nd(equal_to<char>(), ':'));
 

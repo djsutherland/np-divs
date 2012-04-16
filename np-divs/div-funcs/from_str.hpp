@@ -37,7 +37,7 @@
 
 namespace npdivs{
 
-DivFunc* div_func_from_str(std::string spec);
+DivFunc* div_func_from_str(const std::string &spec);
 
 }
 #endif

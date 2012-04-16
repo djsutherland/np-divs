@@ -1,6 +1,7 @@
 file(GLOB_RECURSE DIV_FUNCS div-funcs/*.cpp)
 set(LIBRARY_SOURCES
     np_divs.cpp
+    div_params.cpp
     fix_terms.cpp
     gamma.cpp
     ${DIV_FUNCS}

@@ -31,32 +31,28 @@
 #ifndef NPDIVS_DIV_PARAMS_HPP_
 #define NPDIVS_DIV_PARAMS_HPP_
 #include "np-divs/basics.hpp"
+#include "np-divs/div_params.hpp"
+
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 #include <flann/flann.hpp>
 
 namespace npdivs {
 
-struct DivParams {
-    int k; // the k of our k-nearest-neighbor searches
-    flann::IndexParams index_params;
-    flann::SearchParams search_params;
-    size_t num_threads; // 0 means boost::thread::hardware_concurrency()
-    bool show_progress;
-
-    DivParams(
-        int k = 3,
-        flann::IndexParams index_params = flann::KDTreeSingleIndexParams(),
-        flann::SearchParams search_params = flann::SearchParams(-1),
-        size_t num_threads = 0,
-        bool show_progress = true)
-    :
-        k(k), index_params(index_params), search_params(search_params),
-        num_threads(num_threads), show_progress(show_progress)
-    { }
-
-};
-
-flann::IndexParams index_params_from_str(const std::string &spec);
+// TODO: more index types, support arguments
+flann::IndexParams index_params_from_str(const std::string &spec) {
+    // even though this looks like object slicing, it's not, i promise
+    if (spec == "linear" || spec == "brute") {
+        flann::LinearIndexParams ps;
+        return ps;
+    } else if (spec == "kdtree" || spec == "kd") {
+        flann::KDTreeSingleIndexParams ps;
+        return ps;
+    } else {
+        BOOST_THROW_EXCEPTION(std::domain_error("unknown index type " + spec));
+    }
+}
 
 }
 #endif

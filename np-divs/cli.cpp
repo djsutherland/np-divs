@@ -50,7 +50,7 @@ using namespace std;
 using namespace boost;
 namespace po = boost::program_options;
 
-typedef struct s_popts : noncopyable {
+struct ProgOpts : noncopyable {
     string x_bags_file;
     string y_bags_file;
     string results_file;
@@ -72,18 +72,9 @@ typedef struct s_popts : noncopyable {
     }
 
     void parse_index(const string name) {
-        // TODO: more index types, support arguments
-        if (name == "linear" || name == "brute") {
-            index_params = flann::LinearIndexParams();
-
-        } else if (name == "kdtree" || name == "kd") {
-            index_params = flann::KDTreeSingleIndexParams();
-
-        } else {
-            throw domain_error((format("unknown index type %s") % name).str());
-        }
+        index_params = index_params_from_str(name);
     }
-} ProgOpts;
+};
 
 
 bool parse_args(int argc, char ** argv, ProgOpts& opts);
