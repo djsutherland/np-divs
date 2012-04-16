@@ -63,7 +63,7 @@ struct ProgOpts : noncopyable {
     flann::IndexParams index_params;
     flann::SearchParams search_params;
 
-    bool show_progress;
+    size_t show_progress;
 
     void parse_div_funcs(const vector<string> &names) {
         for (size_t i = 0; i < names.size(); i++) {
@@ -201,10 +201,9 @@ bool parse_args(int argc, char ** argv, ProgOpts& opts) {
                 ->notifier(bind(&ProgOpts::parse_index, ref(opts), _1)),
             "The nearest-neighbor index to use. Options: linear, kdtree.")
         ("progress,p",
-            po::value<bool>()->default_value(false)->zero_tokens(),
-            "Show progress indications (the default).")
-        ("no-progress,q",
-            po::value<bool>()->default_value(false)->zero_tokens())
+            po::value<size_t>(&opts.show_progress)->default_value(1000),
+            "Show progress indications every X computations (default 1000; "
+            "use 0 to not show any).")
     ;
 
     po::variables_map vm;
@@ -217,12 +216,6 @@ bool parse_args(int argc, char ** argv, ProgOpts& opts) {
         }
 
         po::notify(vm);
-
-        if (vm["no-progress"].as<bool>()) {
-            opts.show_progress = false;
-        } else {
-            opts.show_progress = true;
-        }
 
     } catch (std::exception &e) {
         cerr << "Error: " << e.what() << endl;

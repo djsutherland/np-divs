@@ -270,11 +270,11 @@ class NPDivTest : public ::testing::Test {
 
     NPDivTest() :
         params(DivParams(
-                    3,
+                    3, // k
                     flann::KDTreeSingleIndexParams(),
                     SearchParams(flann::FLANN_CHECKS_UNLIMITED),
-                    0,
-                    false))
+                    0, // threads
+                    0)) // print progress every
     {}
 
     virtual ~NPDivTest() {}

@@ -36,22 +36,28 @@
 
 namespace npdivs {
 
+void print_progress_cerr(size_t);
+
 struct DivParams {
     int k; // the k of our k-nearest-neighbor searches
     flann::IndexParams index_params;
     flann::SearchParams search_params;
     size_t num_threads; // 0 means boost::thread::hardware_concurrency()
-    bool show_progress;
+
+    size_t show_progress; // show progress every X steps
+    void (*print_progress)(size_t);
 
     DivParams(
         int k = 3,
         flann::IndexParams index_params = flann::KDTreeSingleIndexParams(),
         flann::SearchParams search_params = flann::SearchParams(-1),
         size_t num_threads = 0,
-        bool show_progress = true)
+        size_t show_progress = 1000,
+        void print_progress(size_t) = &print_progress_cerr)
     :
         k(k), index_params(index_params), search_params(search_params),
-        num_threads(num_threads), show_progress(show_progress)
+        num_threads(num_threads),
+        show_progress(show_progress), print_progress(print_progress)
     { }
 
 };

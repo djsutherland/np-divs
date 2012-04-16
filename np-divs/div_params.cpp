@@ -37,6 +37,10 @@
 
 namespace npdivs {
 
+void print_progress_cerr(size_t left) {
+    std::cerr << left << " pairs left to compute\n";
+}
+
 // TODO: more index types, support arguments
 flann::IndexParams index_params_from_str(const std::string &spec) {
     // even though this looks like object slicing, it's not, i promise

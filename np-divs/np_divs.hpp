@@ -174,7 +174,8 @@ class divcalc_worker : boost::noncopyable {
     const size_t num_dfs;
 
     const flann::SearchParams &search_params;
-    const bool show_progress;
+    const size_t show_progress;
+    void (*print_progress)(size_t);
 
     flann::Matrix<double> *results;
     boost::mutex &jobs_mutex;
@@ -190,14 +191,16 @@ class divcalc_worker : boost::noncopyable {
             int dim,
             const boost::ptr_vector<DivFunc> &div_funcs,
             const flann::SearchParams &search_params,
-            bool show_progress,
+            size_t show_progress,
+            void (*print_progress)(size_t),
             flann::Matrix<double> *results,
             boost::mutex &jobs_mutex,
             std::queue<size_pair> &jobs,
             boost::exception_ptr &error)
         :
             k(k), dim(dim), div_funcs(div_funcs), num_dfs(div_funcs.size()),
-            search_params(search_params), show_progress(show_progress),
+            search_params(search_params),
+            show_progress(show_progress), print_progress(print_progress),
             results(results),
             jobs_mutex(jobs_mutex), jobs(jobs), error(error)
         { }
@@ -229,6 +232,7 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
     using super::num_dfs;
     using super::search_params;
     using super::show_progress;
+    using super::print_progress;
     using super::results;
     using super::jobs_mutex;
     using super::jobs;
@@ -246,12 +250,14 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
             const boost::ptr_vector<DivFunc> &div_funcs,
             int k, int dim,
             const flann::SearchParams &search_params,
-            bool show_progress,
+            size_t show_progress,
+            void (*print_progress)(size_t),
             flann::Matrix<double> *results,
             boost::mutex &jobs_mutex, std::queue<size_pair> &jobs,
             boost::exception_ptr &error)
         :
-            super(k, dim, div_funcs, search_params, show_progress,
+            super(k, dim, div_funcs, search_params,
+                    show_progress, print_progress,
                     results, jobs_mutex, jobs, error),
             bags(bags), indices(indices), rhos(rhos)
         { }
@@ -277,6 +283,7 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
     using super::num_dfs;
     using super::search_params;
     using super::show_progress;
+    using super::print_progress;
     using super::results;
     using super::jobs_mutex;
     using super::jobs;
@@ -293,12 +300,14 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
             const boost::ptr_vector<DivFunc> &div_funcs,
             int k, int dim,
             const flann::SearchParams &search_params,
-            bool show_progress,
+            size_t show_progress,
+            void (*print_progress)(size_t),
             flann::Matrix<double> *results,
             boost::mutex &jobs_mutex, std::queue<size_pair> &jobs,
             boost::exception_ptr &error)
         :
-            super(k, dim, div_funcs, search_params, show_progress,
+            super(k, dim, div_funcs, search_params,
+                    show_progress, print_progress,
                     results, jobs_mutex, jobs, error),
             x_bags(x_bags), y_bags(y_bags),
             x_indices(x_indices), y_indices(y_indices),
@@ -375,8 +384,11 @@ void np_divs(
     // do nearest-neighbor searches for each bag to itself
     const vector<DistVec> &rhos =
         get_rhos(bags, indices, num_bags, k, params.search_params, num_threads);
-    if (params.show_progress)
-        std::cerr << "Done calculating rhos\n";
+
+    size_t num_jobs = num_bags * (num_bags + 1) / 2;
+    if (params.show_progress && num_jobs % params.show_progress != 0) {
+        params.print_progress(num_jobs);
+    }
 
     // this queue will tell threads what to do
     std::queue<std::pair<size_t, size_t> > jobs;
@@ -391,13 +403,22 @@ void np_divs(
         boost::exception_ptr error;
         divcalc_samebags_worker<Distance> worker(
                 bags, indices, rhos, div_funcs, k, dim, params.search_params,
-                params.show_progress, results, jobs_mutex, jobs, error
+                params.show_progress, params.print_progress,
+                results, jobs_mutex, jobs, error
         );
 
         // ignore the queue, just use do_job directly
-        for (size_t i = 0; i < num_bags; i++)
-            for (size_t j = 0; j <= i; j++)
+        const size_t mod = params.show_progress;
+
+        for (size_t i = 0; i < num_bags; i++) {
+            for (size_t j = 0; j <= i; j++) {
+                if (mod && num_jobs % mod == 0)
+                    params.print_progress(num_jobs);
+
                 worker.do_job(i, j);
+                num_jobs--;
+            }
+        }
 
     } else {
         // put jobs in the queue
@@ -415,7 +436,8 @@ void np_divs(
             // create the worker
             workers.push_back(new divcalc_samebags_worker<Distance>(
                 bags, indices, rhos, div_funcs, k, dim, params.search_params,
-                params.show_progress, results, jobs_mutex, jobs, errors[i]
+                params.show_progress, params.print_progress,
+                results, jobs_mutex, jobs, errors[i]
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
         }
@@ -521,8 +543,6 @@ void np_divs(
            get_rhos(x_bags, x_indices, num_x, k, ps.search_params, num_threads);
     const vector<DistVec> &y_rhos =
            get_rhos(y_bags, y_indices, num_y, k, ps.search_params, num_threads);
-    if (ps.show_progress)
-        std::cerr << "Done calculating rhos\n";
 
     // compute the divergences!
     //
@@ -530,6 +550,11 @@ void np_divs(
 
     // this queue will tell threads what to do
     std::queue<std::pair<size_t, size_t> > jobs;
+
+    size_t num_jobs = num_x * num_y;
+    if (ps.show_progress && num_jobs % ps.show_progress != 0) {
+        ps.print_progress(num_jobs);
+    }
 
     // to avoid simultaneous access to jobs. the only other non-const things
     // are the indices (which are thread-safe for searching) and results, which
@@ -540,14 +565,23 @@ void np_divs(
         boost::exception_ptr error;
         divcalc_diffbags_worker<Distance> worker(
             x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-            div_funcs, k, dim, ps.search_params, ps.show_progress,
+            div_funcs, k, dim, ps.search_params,
+            ps.show_progress, ps.print_progress,
             results, jobs_mutex, jobs, error
         );
 
+        const size_t mod = ps.show_progress;
+
         // forget the queue and lock, just do_job directly
-        for (size_t i = 0; i < num_x; i++)
-            for (size_t j = 0; j < num_y; j++)
+        for (size_t i = 0; i < num_x; i++) {
+            for (size_t j = 0; j < num_y; j++) {
+                if (mod && num_jobs % mod == 0)
+                    ps.print_progress(num_jobs);
+
                 worker.do_job(i, j);
+                num_jobs--;
+            }
+        }
 
     } else {
         // queue up our jobs
@@ -566,7 +600,8 @@ void np_divs(
             // create the worker
             workers.push_back(new divcalc_diffbags_worker<Distance>(
                 x_bags, y_bags, x_indices, y_indices, x_rhos, y_rhos,
-                div_funcs, k, dim, ps.search_params, ps.show_progress,
+                div_funcs, k, dim, ps.search_params,
+                ps.show_progress, ps.print_progress,
                 results, jobs_mutex, jobs, errors[i]
             ));
             worker_threads.create_thread(boost::ref(workers[i]));
@@ -597,8 +632,9 @@ void divcalc_worker<Distance>::operator()() {
                 if (sz == 0)
                     return;
 
-                if (show_progress && sz % 1000 == 0)
-                    std::cerr << sz << " pairs left to compute\n";
+                if (show_progress && sz % show_progress == 0) {
+                    print_progress(sz);
+                }
 
                 job = jobs.front();
                 jobs.pop();
