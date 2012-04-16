@@ -41,6 +41,8 @@ endforeach()
 
 include_directories(BEFORE ${PROJECT_SOURCE_DIR})
 
+find_package(Threads REQUIRED)
+
 # let user override boost paths
 set(BOOST_HEADERS CACHE PATH "Header directory for libraries")
 set(BOOST_THREAD CACHE PATH "Path to Boost Thread library")
