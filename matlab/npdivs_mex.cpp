@@ -364,7 +364,7 @@ void mexFunction(int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs) {
     mwSize num_y = num_x;
     MatrixF *y_bags = NULL;
 
-    if (y_bags_m != NULL) {
+    if (y_bags_m != NULL && y_bags_m != x_bags_m) {
         num_y = mxGetNumberOfElements(y_bags_m);
         if (num_y == 0) {
             num_y = num_x;
