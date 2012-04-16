@@ -167,11 +167,11 @@ class divcalc_worker : boost::noncopyable {
     typedef std::vector<DistVec> DistVecVec;
     typedef std::pair<size_t, size_t> size_pair;
 
-    int k;
-    int dim;
+    const int k;
+    const int dim;
 
     const boost::ptr_vector<DivFunc> &div_funcs;
-    size_t num_dfs;
+    const size_t num_dfs;
 
     const flann::SearchParams &search_params;
 
