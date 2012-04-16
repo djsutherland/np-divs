@@ -1,4 +1,4 @@
-function [Ds] = NPDivs(x_bags, y_bags, div_funcs, options)
+function [Ds] = NPDivs_filebased(x_bags, y_bags, div_funcs, options)
 %NPDivs Calculate nonparametric divergence estimates via the npdivs binary.
 %
 % Arguments:
