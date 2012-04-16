@@ -41,14 +41,18 @@ if nargin < 4; options = struct(); end
 
 % check that dimensionalities agree
 dim = size(x_bags{1}, 2);
-for ind = 1:numel(x_bags)
+num_x = numel(x_bags);
+for ind = 1:num_x
     assert(ndims(x_bags{ind}) == 2);
     assert(size(x_bags{ind}, 1) > 0);
     assert(size(x_bags{ind}, 2) == dim);
 end
 
-if ~isempty(y_bags)
-    for ind = 1:numel(y_bags)
+if isempty(y_bags)
+    num_y = num_x;
+else
+    num_y = numel(y_bags);
+    for ind = 1:num_y
         assert(ndims(y_bags{ind}) == 2);
         assert(size(y_bags{ind}, 1) > 0);
         assert(size(y_bags{ind}, 2) == dim);
@@ -57,7 +61,7 @@ end
 
 options.div_funcs = div_funcs;
 if ~isfield(options, 'show_progress')
-    options.show_progress = numel(x_bags) * numel(y_bags) > 5000;
+    options.show_progress = num_x * num_y > 5000;
 end
 
 Ds = npdivs_mex(x_bags, y_bags, options);
