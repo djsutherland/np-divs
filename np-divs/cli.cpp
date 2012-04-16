@@ -63,6 +63,8 @@ typedef struct s_popts : noncopyable {
     flann::IndexParams index_params;
     flann::SearchParams search_params;
 
+    bool show_progress;
+
     void parse_div_funcs(const vector<string> &names) {
         for (size_t i = 0; i < names.size(); i++) {
             div_funcs.push_back(div_func_from_str(names[i]));
@@ -110,7 +112,8 @@ int main(int argc, char ** argv) {
         } else {
             ifstream ifs(opts.x_bags_file.c_str(), ifstream::in);
             x_bags = matrices_from_csv(ifs, num_x);
-            cerr << "Read " << num_x << " x bags.\n";
+            if (opts.show_progress)
+                cerr << "Read " << num_x << " x bags.\n";
         }
 
         size_t num_y;
@@ -123,21 +126,23 @@ int main(int argc, char ** argv) {
         } else {
             ifstream ifs(opts.y_bags_file.c_str(), ifstream::in);
             y_bags = matrices_from_csv(ifs, num_y);
-            cerr << "Read " << num_x << " y bags.\n";
+            if (opts.show_progress)
+                cerr << "Read " << num_x << " y bags.\n";
         }
 
 
         Matrix* results = alloc_matrix_array<double>(num_df, num_x, num_y);
 
         DivParams params(opts.k, opts.index_params, opts.search_params,
-                opts.num_threads);
+                opts.num_threads, opts.show_progress);
 
         boost::posix_time::ptime t_start = boost::posix_time::second_clock::local_time();
 
         np_divs(x_bags, num_x, y_bags, num_y, opts.div_funcs, results, params);
 
         boost::posix_time::ptime t_end = boost::posix_time::second_clock::local_time();
-        cout << "Computation took " << (t_end - t_start).total_seconds() << " seconds.\n";
+        if (opts.show_progress)
+            cerr << "Computation took " << (t_end - t_start).total_seconds() << " seconds.\n";
 
         if (opts.results_file == "-") {
             matrix_array_to_csv(cout, results, num_df);
@@ -204,6 +209,11 @@ bool parse_args(int argc, char ** argv, ProgOpts& opts) {
             po::value<string>()->default_value("kdtree")
                 ->notifier(bind(&ProgOpts::parse_index, ref(opts), _1)),
             "The nearest-neighbor index to use. Options: linear, kdtree.")
+        ("progress,p",
+            po::value<bool>()->default_value(false)->zero_tokens(),
+            "Show progress indications (the default).")
+        ("no-progress,q",
+            po::value<bool>()->default_value(false)->zero_tokens())
     ;
 
     po::variables_map vm;
@@ -216,6 +226,12 @@ bool parse_args(int argc, char ** argv, ProgOpts& opts) {
         }
 
         po::notify(vm);
+
+        if (vm["no-progress"].as<bool>()) {
+            opts.show_progress = false;
+        } else {
+            opts.show_progress = true;
+        }
 
     } catch (std::exception &e) {
         cerr << "Error: " << e.what() << endl;
