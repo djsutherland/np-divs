@@ -269,8 +269,12 @@ class NPDivTest : public ::testing::Test {
     protected:
 
     NPDivTest() :
-        params(DivParams(3, flann::KDTreeSingleIndexParams(),
-                            SearchParams(flann::FLANN_CHECKS_UNLIMITED)))
+        params(DivParams(
+                    3,
+                    flann::KDTreeSingleIndexParams(),
+                    SearchParams(flann::FLANN_CHECKS_UNLIMITED),
+                    0,
+                    false))
     {}
 
     virtual ~NPDivTest() {}

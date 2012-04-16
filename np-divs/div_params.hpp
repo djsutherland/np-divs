@@ -41,15 +41,17 @@ struct DivParams {
     flann::IndexParams index_params;
     flann::SearchParams search_params;
     size_t num_threads; // 0 means boost::thread::hardware_concurrency()
+    bool show_progress;
 
     DivParams(
         int k = 3,
         flann::IndexParams index_params = flann::KDTreeSingleIndexParams(),
         flann::SearchParams search_params = flann::SearchParams(-1),
-        size_t num_threads = 0)
+        size_t num_threads = 0,
+        bool show_progress = true)
     :
         k(k), index_params(index_params), search_params(search_params),
-        num_threads(num_threads)
+        num_threads(num_threads), show_progress(show_progress)
     { }
 
 };
