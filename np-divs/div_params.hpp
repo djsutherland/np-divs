@@ -33,6 +33,7 @@
 #include "np-divs/basics.hpp"
 
 #include <flann/flann.hpp>
+#include <boost/function.hpp>
 
 namespace npdivs {
 
@@ -45,7 +46,7 @@ struct DivParams {
     size_t num_threads; // 0 means boost::thread::hardware_concurrency()
 
     size_t show_progress; // show progress every X steps
-    void (*print_progress)(size_t);
+    boost::function<void (size_t)> print_progress;
 
     DivParams(
         int k = 3,
@@ -56,9 +57,20 @@ struct DivParams {
         void print_progress(size_t) = &print_progress_cerr)
     :
         k(k), index_params(index_params), search_params(search_params),
-        num_threads(num_threads),
-        show_progress(show_progress), print_progress(print_progress)
+        num_threads(num_threads), show_progress(show_progress),
+        print_progress(boost::function<void (size_t)>(print_progress))
     { }
+
+    DivParams(int k,
+            flann::IndexParams index_params, flann::SearchParams search_params,
+            size_t num_threads, size_t show_progress,
+            boost::function<void(size_t)> print_progress)
+    :
+        k(k), index_params(index_params), search_params(search_params),
+        num_threads(num_threads), show_progress(show_progress),
+        print_progress(print_progress)
+    { }
+
 
 };
 

@@ -175,7 +175,7 @@ class divcalc_worker : boost::noncopyable {
 
     const flann::SearchParams &search_params;
     const size_t show_progress;
-    void (*print_progress)(size_t);
+    boost::function<void (size_t)> print_progress;
 
     flann::Matrix<double> *results;
     boost::mutex &jobs_mutex;
@@ -192,7 +192,7 @@ class divcalc_worker : boost::noncopyable {
             const boost::ptr_vector<DivFunc> &div_funcs,
             const flann::SearchParams &search_params,
             size_t show_progress,
-            void (*print_progress)(size_t),
+            boost::function<void (size_t)> print_progress,
             flann::Matrix<double> *results,
             boost::mutex &jobs_mutex,
             std::queue<size_pair> &jobs,
@@ -251,7 +251,7 @@ class divcalc_samebags_worker : public divcalc_worker<Distance> {
             int k, int dim,
             const flann::SearchParams &search_params,
             size_t show_progress,
-            void (*print_progress)(size_t),
+            boost::function<void (size_t)> print_progress,
             flann::Matrix<double> *results,
             boost::mutex &jobs_mutex, std::queue<size_pair> &jobs,
             boost::exception_ptr &error)
@@ -301,7 +301,7 @@ class divcalc_diffbags_worker : public divcalc_worker<Distance> {
             int k, int dim,
             const flann::SearchParams &search_params,
             size_t show_progress,
-            void (*print_progress)(size_t),
+            boost::function<void (size_t)> print_progress,
             flann::Matrix<double> *results,
             boost::mutex &jobs_mutex, std::queue<size_pair> &jobs,
             boost::exception_ptr &error)
@@ -447,6 +447,9 @@ void np_divs(
             if (errors[i])
                 boost::rethrow_exception(errors[i]);
     }
+
+    if (params.show_progress)
+        params.print_progress(0);
 
     free_indices(indices, num_bags);
 }
@@ -612,6 +615,10 @@ void np_divs(
             if (errors[i])
                 boost::rethrow_exception(errors[i]);
     }
+
+    if (ps.show_progress)
+        ps.print_progress(0);
+
 
     free_indices(x_indices, num_x);
     free_indices(y_indices, num_y);

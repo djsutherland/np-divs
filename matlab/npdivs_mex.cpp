@@ -38,6 +38,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/bind.hpp>
 #include <boost/exception/all.hpp>
 #include <boost/format.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
@@ -280,6 +281,28 @@ mxArray *make_matrix_cells(const flann::Matrix<T> *bags, size_t n) {
     return cells;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Function to print a progress bar
+
+class ProgressBar {
+    size_t total;
+
+    public:
+
+    ProgressBar(size_t total) : total(total) { }
+
+    void update(size_t left) {
+        size_t done = total - left;
+        size_t percent = (size_t) floor(done * 100. / total);
+
+        mexPrintf("\r%d / %d [%d%%]           ", done, total, percent);
+        if (left == 0)
+            mexPrintf("\n");
+        //mexCallMATLAB(0, NULL, 0, NULL, "drawnow");
+        //mexEvalString("drawnow");
+    }
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function to compute divergences
@@ -327,17 +350,20 @@ struct DivOptions {
         }
     }
 
-    DivParams getDivParams() const {
+    DivParams getDivParams(const ProgressBar &pbar) const {
         flann::SearchParams search_params(-1);
+
         return DivParams(k,
                 npdivs::index_params_from_str(index_type),
                 search_params,
-                num_threads, show_progress);
+                num_threads,
+                show_progress ? 200 : 0,
+                boost::bind(&ProgressBar::update, pbar, _1));
     }
 };
 
 
-void mexFunction(int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs) {
+void do_divs(int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs) {
     if (nrhs != 3) mexErrMsgTxt("npdivs takes exactly three arguments");
     if (nlhs != 1) mexErrMsgTxt("npdivs returns exactly 1 output");
 
@@ -392,8 +418,10 @@ void mexFunction(int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs) {
 
 
     // run it!
+    ProgressBar pbar(y_bags == NULL ? (num_x+1) * num_x / 2 : num_x * num_y);
+
     npdivs::np_divs(x_bags, num_x, y_bags, num_y,
-            dfs, divs, opts.getDivParams());
+            dfs, divs, opts.getDivParams(pbar));
 
     // copy into output
     mxArray* divs_cell = make_matrix_cells(divs, num_df);
@@ -402,4 +430,16 @@ void mexFunction(int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs) {
     free_matalloced_matrix_array(divs, num_df);
 
     plhs[0] = divs_cell;
+}
+
+void mexFunction(int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs) {
+    try {
+        do_divs(nlhs, plhs, nrhs, prhs);
+    } catch (boost::exception &e) {
+        mexPrintf("\nerror: %s", boost::diagnostic_information(e).c_str());
+        throw;
+    } catch (std::exception &e) {
+        mexPrintf("\nerror: %s", boost::diagnostic_information(e).c_str());
+        throw;
+    }
 }
