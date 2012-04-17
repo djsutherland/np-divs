@@ -14,20 +14,20 @@ set(LIBS
 )
 
 add_library(np-divs SHARED ${LIBRARY_SOURCES})
-target_link_libraries(np-divs ${LIBS})
+target_link_libraries(np-divs ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 add_library(np-divs_s STATIC ${LIBRARY_SOURCES})
 target_link_libraries(np-divs_s ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 if(CMAKE_COMPILER_IS_GNUCC)
-    set_target_properties(np-divs PROPERTIES COMPILE_FLAGS -fPIC)
+    set_target_properties(np-divs_s PROPERTIES COMPILE_FLAGS -fPIC)
 endif()
 
 add_executable(npdivs cli.cpp)
 if(EXE_LINK_SHARED)
-    target_link_libraries(npdivs np-divs ${BOOST_PROGRAM_OPTIONS})
+    target_link_libraries(npdivs np-divs ${BOOST_PROGRAM_OPTIONS} ${CMAKE_THREAD_LIBS_INIT})
 else()
     target_link_libraries(npdivs np-divs_s
-        ${LIBS} ${CMAKE_THREAD_LIBS_INIT} ${BOOST_PROGRAM_OPTIONS})
+        ${LIBS} ${BOOST_PROGRAM_OPTIONS} ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
 install(
