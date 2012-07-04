@@ -37,6 +37,7 @@
 
 namespace npdivs {
 
+void do_nothing(size_t);
 void print_progress_cerr(size_t);
 
 struct DivParams {
@@ -58,7 +59,9 @@ struct DivParams {
     :
         k(k), index_params(index_params), search_params(search_params),
         num_threads(num_threads), show_progress(show_progress),
-        print_progress(boost::function<void (size_t)>(print_progress))
+        print_progress(boost::function<void (size_t)>(
+                print_progress == NULL ? &do_nothing : print_progress
+        ))
     { }
 
     DivParams(int k,

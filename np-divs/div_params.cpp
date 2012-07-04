@@ -37,6 +37,7 @@
 
 namespace npdivs {
 
+void do_nothing(size_t left) {}
 void print_progress_cerr(size_t left) {
     std::cerr << left << " pairs left to compute\n";
 }
