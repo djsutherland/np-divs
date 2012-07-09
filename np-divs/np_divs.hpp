@@ -732,6 +732,8 @@ void verify_allocated(
             std::cerr << err << std::endl;
             BOOST_THROW_EXCEPTION(std::length_error(err.str()));
         }
+        // if we're going to segfault anyway, might as well do it now :)
+        m[0][0] = 0;
     }
 }
 
