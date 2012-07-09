@@ -51,11 +51,7 @@
 
 #include <np-divs/matrix_arrays.hpp>
 #include <np-divs/div-funcs/from_str.hpp>
-
-#include "sdm/sdm.hpp"
-#include "sdm/kernels/gaussian.hpp"
-#include "sdm/kernels/linear.hpp"
-#include "sdm/kernels/polynomial.hpp"
+#include <np-divs/np_divs.hpp>
 
 typedef flann::Matrix<float> MatrixF;
 typedef flann::Matrix<double> MatrixD;
@@ -64,9 +60,6 @@ using std::string;
 using std::vector;
 
 using npdivs::DivParams;
-
-using sdm::SDM;
-typedef SDM<float> SDMF;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers to convert from MATLAB to C++ types
