@@ -119,7 +119,7 @@ DivFunc* div_func_from_str(const string &spec) {
         }
 
     } else {
-        THROW_DOM("unknown div func type " + kind);
+        THROW_DOM("unknown div func type '" + kind + "'");
     }
 }
 
