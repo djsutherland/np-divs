@@ -10,6 +10,7 @@ set(LIBRARY_SOURCES
 
 set(LIBS
     ${FLANN_LIBRARIES}
+    ${BOOST_SYSTEM}
     ${BOOST_THREAD}
 )
 
