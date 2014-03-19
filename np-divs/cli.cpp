@@ -179,7 +179,7 @@ bool parse_args(int argc, char ** argv, ProgOpts& opts) {
             "div(x_i, y_j). Use - for stdout.")
         ("div-func,f",
             po::value< vector<string> >()->composing()
-               ->notifier(bind(&ProgOpts::parse_div_funcs, ref(opts), _1)),
+               ->notifier(bind(&ProgOpts::parse_div_funcs, boost::ref(opts), _1)),
             "Divergence functions to use; can be specified more than once. If "
             "none passed, uses L2. Format is name:arg1:arg2:..., where argN "
             "refers to the Nth argument to the corresponding DivFunc's "
@@ -198,7 +198,7 @@ bool parse_args(int argc, char ** argv, ProgOpts& opts) {
             "The k for k-nearest-neighbor calculations.")
         ("index,i",
             po::value<string>()->default_value("kdtree")
-                ->notifier(bind(&ProgOpts::parse_index, ref(opts), _1)),
+                ->notifier(bind(&ProgOpts::parse_index, boost::ref(opts), _1)),
             "The nearest-neighbor index to use. Options: linear, kdtree.")
         ("progress,p",
             po::value<size_t>(&opts.show_progress)->default_value(1000),
